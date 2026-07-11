@@ -1,19 +1,47 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAppContext } from "@/context/AppContext";
-import { useSimulation } from "@/context/SimulationContext";
+import { DEMO_AGENT_CODE, useSimulation } from "@/context/SimulationContext";
 import ResizableTransactionTable from "@/components/transactions/ResizableTransactionTable";
+import { getTransactions, TransactionSummaryResponse } from "@/lib/api/transactions";
 
 export default function Transactions() {
   const { t } = useAppContext();
-  const { transactions } = useSimulation();
+  const { refreshCounter } = useSimulation();
   
   const [filterProvider, setFilterProvider] = useState<string | "All">("All");
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredData = filterProvider === "All" 
-    ? transactions 
-    : transactions.filter((tx: any) => tx.provider === filterProvider);
+  useEffect(() => {
+    async function loadTransactions() {
+      try {
+        setLoading(true);
+        const res = await getTransactions(DEMO_AGENT_CODE, {
+          providerCode: filterProvider === "All" ? undefined : filterProvider,
+          size: 50
+        });
+        
+        // Map backend DTO to frontend table format
+        const mapped = res.transactions.map((tx: TransactionSummaryResponse) => ({
+          id: tx.transactionReference,
+          provider: tx.providerCode,
+          type: tx.type.toLowerCase(),
+          amount: tx.amount,
+          account: tx.syntheticAccountId,
+          time: new Date(tx.occurredAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'}),
+          timestampMs: new Date(tx.occurredAt).getTime()
+        }));
+        setTransactions(mapped);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadTransactions();
+  }, [filterProvider, refreshCounter]);
 
   return (
     <div className="p-6 lg:p-8 max-w-[1600px] mx-auto">
@@ -37,7 +65,11 @@ export default function Transactions() {
         </div>
       </div>
 
-      <ResizableTransactionTable data={filteredData} />
+      {loading ? (
+        <div className="p-12 text-center text-gray-500 neu-inset rounded-xl font-bold">Loading recent transactions...</div>
+      ) : (
+        <ResizableTransactionTable data={transactions} />
+      )}
     </div>
   );
 }

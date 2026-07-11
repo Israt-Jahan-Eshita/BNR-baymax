@@ -95,6 +95,7 @@ export default function Sidebar() {
     { href: "/", label: t("nav.dashboard"), icon: <IconDashboard /> },
     { href: "/transactions", label: t("nav.recentTx"), icon: <IconTransactions /> },
     { href: "/alerts", label: t("nav.alerts"), icon: <IconAlerts /> },
+    { href: "/cases", label: "Cases", icon: <IconShield /> },
     { href: "/simulate", label: t("nav.simulator"), icon: <IconSimulate /> },
     { href: "/validation", label: t("nav.validation"), icon: <IconMetrics /> },
   ];
