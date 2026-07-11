@@ -5,6 +5,7 @@ import com.bkash.baymax.superagent_api.dto.response.AlertDetailResponse;
 import com.bkash.baymax.superagent_api.model.Alert;
 import com.bkash.baymax.superagent_api.repository.AlertRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +29,7 @@ public class AlertService {
 
     private final AlertRepository alertRepository;
     private final Clock clock;
+    private final ApplicationEventPublisher applicationEventPublisher;
 
     @Transactional
     public Optional<AlertDetailResponse> createIfAbsent(
@@ -67,6 +69,12 @@ public class AlertService {
                 .build();
 
         Alert saved = alertRepository.save(alert);
+
+        applicationEventPublisher.publishEvent(
+                new com.bkash.baymax.superagent_api.event.AlertPersistedEvent(
+                        saved.getAlertCode()
+                )
+        );
 
         return Optional.of(
                 toDetailResponse(saved)

@@ -15,6 +15,10 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
+import org.mockito.Captor;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -38,6 +42,9 @@ class AlertServiceTest {
     @Mock
     private AlertRepository alertRepository;
 
+    @Mock
+    private ApplicationEventPublisher applicationEventPublisher;
+
     @Captor
     private ArgumentCaptor<Alert> alertCaptor;
 
@@ -55,11 +62,12 @@ class AlertServiceTest {
         when(alertRepository.existsByAlertFingerprint(anyString())).thenReturn(false);
         when(alertRepository.save(any(Alert.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        AlertService service = new AlertService(alertRepository, Clock.fixed(NOW, ZoneOffset.UTC));
+        AlertService service = new AlertService(alertRepository, Clock.fixed(NOW, ZoneOffset.UTC), applicationEventPublisher);
         Optional<AlertDetailResponse> response = service.createIfAbsent(signal);
 
         assertTrue(response.isPresent());
         verify(alertRepository).save(alertCaptor.capture());
+        verify(applicationEventPublisher).publishEvent(any(com.bkash.baymax.superagent_api.event.AlertPersistedEvent.class));
         
         Alert savedAlert = alertCaptor.getValue();
         assertEquals("AGT-001", savedAlert.getAgent().getAgentCode());
@@ -77,9 +85,10 @@ class AlertServiceTest {
 
         when(alertRepository.existsByAlertFingerprint(anyString())).thenReturn(true);
 
-        AlertService service = new AlertService(alertRepository, Clock.fixed(NOW, ZoneOffset.UTC));
+        AlertService service = new AlertService(alertRepository, Clock.fixed(NOW, ZoneOffset.UTC), applicationEventPublisher);
         Optional<AlertDetailResponse> response = service.createIfAbsent(signal);
 
         assertFalse(response.isPresent());
+        verify(applicationEventPublisher, org.mockito.Mockito.never()).publishEvent(any());
     }
 }
