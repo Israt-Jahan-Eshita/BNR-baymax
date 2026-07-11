@@ -8,14 +8,18 @@ import com.bkash.baymax.superagent_api.model.PhysicalCashPosition;
 import com.bkash.baymax.superagent_api.model.Provider;
 import com.bkash.baymax.superagent_api.model.ProviderBalance;
 import com.bkash.baymax.superagent_api.model.SimulatedTransaction;
+import com.bkash.baymax.superagent_api.model.ProviderDataHealth;
+import com.bkash.baymax.superagent_api.model.enums.ForecastConfidence;
 import com.bkash.baymax.superagent_api.model.enums.LiquidityPressureStatus;
 import com.bkash.baymax.superagent_api.model.enums.LiquidityResourceType;
+import com.bkash.baymax.superagent_api.model.enums.ProviderDataHealthStatus;
 import com.bkash.baymax.superagent_api.model.enums.TransactionSource;
 import com.bkash.baymax.superagent_api.model.enums.TransactionType;
 import com.bkash.baymax.superagent_api.repository.AgentRepository;
 import com.bkash.baymax.superagent_api.repository.PhysicalCashPositionRepository;
 import com.bkash.baymax.superagent_api.repository.ProviderBalanceRepository;
 import com.bkash.baymax.superagent_api.repository.SimulatedTransactionRepository;
+import com.bkash.baymax.superagent_api.repository.ProviderDataHealthRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -53,6 +57,10 @@ class LiquidityForecastServiceTest {
     @Mock
     private SimulatedTransactionRepository
             simulatedTransactionRepository;
+
+    @Mock
+    private ProviderDataHealthRepository
+            providerDataHealthRepository;
 
     @Test
     void shouldForecastHighPhysicalCashPressure() {
@@ -92,6 +100,11 @@ class LiquidityForecastServiceTest {
 
         when(
                 providerBalanceRepository
+                        .findAllByAgentAgentCode("AGT-001")
+        ).thenReturn(List.of());
+
+        when(
+                providerDataHealthRepository
                         .findAllByAgentAgentCode("AGT-001")
         ).thenReturn(List.of());
 
@@ -160,6 +173,11 @@ class LiquidityForecastServiceTest {
         ).thenReturn(List.of());
 
         when(
+                providerDataHealthRepository
+                        .findAllByAgentAgentCode("AGT-001")
+        ).thenReturn(List.of());
+
+        when(
                 simulatedTransactionRepository
                         .findAllByAgentAgentCodeAndOccurredAtBetweenOrderByOccurredAtAsc(
                                 "AGT-001",
@@ -190,6 +208,193 @@ class LiquidityForecastServiceTest {
         );
     }
 
+    @Test
+    void delayedProviderDataShouldReduceForecastConfidence() {
+        Agent agent = createAgent();
+
+        Provider provider = Provider.builder()
+                .id(1L)
+                .providerCode("BKASH")
+                .displayName("bKash")
+                .active(true)
+                .build();
+
+        ProviderBalance providerBalance =
+                ProviderBalance.builder()
+                        .agent(agent)
+                        .provider(provider)
+                        .eMoneyBalance(
+                                new BigDecimal("30000.00")
+                        )
+                        .build();
+
+        PhysicalCashPosition cashPosition =
+                PhysicalCashPosition.builder()
+                        .agent(agent)
+                        .cashBalance(
+                                new BigDecimal("100000.00")
+                        )
+                        .build();
+
+        ProviderDataHealth dataHealth =
+                ProviderDataHealth.builder()
+                        .agent(agent)
+                        .provider(provider)
+                        .status(
+                                ProviderDataHealthStatus.DELAYED
+                        )
+                        .delayMinutes(11)
+                        .lastSuccessfulUpdateAt(
+                                NOW.minusSeconds(660)
+                        )
+                        .build();
+
+        List<SimulatedTransaction> transactions =
+                new ArrayList<>();
+
+        for (int index = 0; index < 20; index++) {
+            transactions.add(
+                    createTransaction(
+                            agent,
+                            TransactionType.CASH_IN,
+                            "2000.00",
+                            NOW.minusSeconds(
+                                    60L * (index + 1)
+                            )
+                    )
+            );
+        }
+
+        when(agentRepository.existsByAgentCode("AGT-001"))
+                .thenReturn(true);
+
+        when(
+                physicalCashPositionRepository
+                        .findByAgentAgentCode("AGT-001")
+        ).thenReturn(Optional.of(cashPosition));
+
+        when(
+                providerBalanceRepository
+                        .findAllByAgentAgentCode("AGT-001")
+        ).thenReturn(List.of(providerBalance));
+
+        when(
+                providerDataHealthRepository
+                        .findAllByAgentAgentCode("AGT-001")
+        ).thenReturn(List.of(dataHealth));
+
+        when(
+                simulatedTransactionRepository
+                        .findAllByAgentAgentCodeAndOccurredAtBetweenOrderByOccurredAtAsc(
+                                "AGT-001",
+                                NOW.minusSeconds(3600),
+                                NOW
+                        )
+        ).thenReturn(transactions);
+
+        LiquidityResourceForecastResponse forecast =
+                createService()
+                        .getForecast("AGT-001")
+                        .resources()
+                        .stream()
+                        .filter(resource ->
+                                "BKASH".equals(
+                                        resource.providerCode()
+                                )
+                        )
+                        .findFirst()
+                        .orElseThrow();
+
+        assertEquals(
+                ProviderDataHealthStatus.DELAYED,
+                forecast.dataHealthStatus()
+        );
+
+        assertEquals(
+                ForecastConfidence.MEDIUM,
+                forecast.confidence()
+        );
+    }
+
+    @Test
+    void missingProviderDataShouldProduceDataUncertainStatus() {
+        Agent agent = createAgent();
+
+        Provider provider = Provider.builder()
+                .id(1L)
+                .providerCode("BKASH")
+                .displayName("bKash")
+                .active(true)
+                .build();
+
+        ProviderBalance providerBalance =
+                ProviderBalance.builder()
+                        .agent(agent)
+                        .provider(provider)
+                        .eMoneyBalance(
+                                new BigDecimal("30000.00")
+                        )
+                        .build();
+
+        PhysicalCashPosition cashPosition =
+                PhysicalCashPosition.builder()
+                        .agent(agent)
+                        .cashBalance(
+                                new BigDecimal("100000.00")
+                        )
+                        .build();
+
+        when(agentRepository.existsByAgentCode("AGT-001"))
+                .thenReturn(true);
+
+        when(
+                physicalCashPositionRepository
+                        .findByAgentAgentCode("AGT-001")
+        ).thenReturn(Optional.of(cashPosition));
+
+        when(
+                providerBalanceRepository
+                        .findAllByAgentAgentCode("AGT-001")
+        ).thenReturn(List.of(providerBalance));
+
+        when(
+                providerDataHealthRepository
+                        .findAllByAgentAgentCode("AGT-001")
+        ).thenReturn(List.of());
+
+        when(
+                simulatedTransactionRepository
+                        .findAllByAgentAgentCodeAndOccurredAtBetweenOrderByOccurredAtAsc(
+                                "AGT-001",
+                                NOW.minusSeconds(3600),
+                                NOW
+                        )
+        ).thenReturn(List.of());
+
+        LiquidityResourceForecastResponse forecast =
+                createService()
+                        .getForecast("AGT-001")
+                        .resources()
+                        .stream()
+                        .filter(resource ->
+                                "BKASH".equals(
+                                        resource.providerCode()
+                                )
+                        )
+                        .findFirst()
+                        .orElseThrow();
+
+        assertEquals(
+                LiquidityPressureStatus.DATA_UNCERTAIN,
+                forecast.status()
+        );
+
+        assertEquals(
+                ForecastConfidence.LOW,
+                forecast.confidence()
+        );
+    }
+
     private LiquidityForecastService createService() {
         Clock clock = Clock.fixed(
                 NOW,
@@ -201,6 +406,7 @@ class LiquidityForecastServiceTest {
                 physicalCashPositionRepository,
                 providerBalanceRepository,
                 simulatedTransactionRepository,
+                providerDataHealthRepository,
                 new LiquidityRateCalculator(),
                 clock
         );

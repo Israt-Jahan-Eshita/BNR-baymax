@@ -3,6 +3,7 @@ package com.bkash.baymax.superagent_api.dto.response;
 import com.bkash.baymax.superagent_api.model.enums.ForecastConfidence;
 import com.bkash.baymax.superagent_api.model.enums.LiquidityPressureStatus;
 import com.bkash.baymax.superagent_api.model.enums.LiquidityResourceType;
+import com.bkash.baymax.superagent_api.model.enums.ProviderDataHealthStatus;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -24,6 +25,8 @@ public record LiquidityResourceForecastResponse(
         ForecastConfidence confidence,
         int confidenceScore,
         int recentTransactionCount,
+        ProviderDataHealthStatus dataHealthStatus,
+        String uncertainty,
         List<String> explanation
 
 ) {

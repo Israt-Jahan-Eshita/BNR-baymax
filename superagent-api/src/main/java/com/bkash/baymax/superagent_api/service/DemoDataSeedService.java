@@ -12,6 +12,9 @@ import com.bkash.baymax.superagent_api.repository.PhysicalCashPositionRepository
 import com.bkash.baymax.superagent_api.repository.ProviderBalanceRepository;
 import com.bkash.baymax.superagent_api.repository.ProviderRepository;
 import com.bkash.baymax.superagent_api.repository.SimulatedTransactionRepository;
+import com.bkash.baymax.superagent_api.model.ProviderDataHealth;
+import com.bkash.baymax.superagent_api.model.enums.ProviderDataHealthStatus;
+import com.bkash.baymax.superagent_api.repository.ProviderDataHealthRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +35,7 @@ public class DemoDataSeedService {
     private final ProviderBalanceRepository providerBalanceRepository;
     private final PhysicalCashPositionRepository physicalCashPositionRepository;
     private final SimulatedTransactionRepository simulatedTransactionRepository;
+    private final ProviderDataHealthRepository providerDataHealthRepository;
 
     @Transactional
     public void seedBaselineIfMissing() {
@@ -68,6 +72,21 @@ public class DemoDataSeedService {
                 agent,
                 rocket,
                 new BigDecimal("30000.00")
+        );
+
+        createProviderDataHealthIfMissing(
+                agent,
+                bkash
+        );
+
+        createProviderDataHealthIfMissing(
+                agent,
+                nagad
+        );
+
+        createProviderDataHealthIfMissing(
+                agent,
+                rocket
         );
 
         createPhysicalCashIfMissing(
@@ -133,6 +152,37 @@ public class DemoDataSeedService {
                         .build();
 
         providerBalanceRepository.save(providerBalance);
+    }
+
+    private void createProviderDataHealthIfMissing(
+            Agent agent,
+            Provider provider
+    ) {
+        boolean exists =
+                providerDataHealthRepository
+                        .existsByAgentIdAndProviderId(
+                                agent.getId(),
+                                provider.getId()
+                        );
+
+        if (exists) {
+            return;
+        }
+
+        ProviderDataHealth dataHealth =
+                ProviderDataHealth.builder()
+                        .agent(agent)
+                        .provider(provider)
+                        .status(
+                                ProviderDataHealthStatus.LIVE
+                        )
+                        .lastSuccessfulUpdateAt(
+                                Instant.now()
+                        )
+                        .delayMinutes(0)
+                        .build();
+
+        providerDataHealthRepository.save(dataHealth);
     }
 
     private void createPhysicalCashIfMissing(

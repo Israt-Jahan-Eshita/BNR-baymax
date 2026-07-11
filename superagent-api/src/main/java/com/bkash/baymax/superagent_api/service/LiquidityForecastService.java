@@ -7,13 +7,16 @@ import com.bkash.baymax.superagent_api.exception.ResourceNotFoundException;
 import com.bkash.baymax.superagent_api.model.PhysicalCashPosition;
 import com.bkash.baymax.superagent_api.model.ProviderBalance;
 import com.bkash.baymax.superagent_api.model.SimulatedTransaction;
+import com.bkash.baymax.superagent_api.model.ProviderDataHealth;
 import com.bkash.baymax.superagent_api.model.enums.ForecastConfidence;
 import com.bkash.baymax.superagent_api.model.enums.LiquidityPressureStatus;
 import com.bkash.baymax.superagent_api.model.enums.LiquidityResourceType;
+import com.bkash.baymax.superagent_api.model.enums.ProviderDataHealthStatus;
 import com.bkash.baymax.superagent_api.repository.AgentRepository;
 import com.bkash.baymax.superagent_api.repository.PhysicalCashPositionRepository;
 import com.bkash.baymax.superagent_api.repository.ProviderBalanceRepository;
 import com.bkash.baymax.superagent_api.repository.SimulatedTransactionRepository;
+import com.bkash.baymax.superagent_api.repository.ProviderDataHealthRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +30,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -41,12 +47,10 @@ public class LiquidityForecastService {
     private static final int RUNWAY_SCALE = 2;
 
     private final AgentRepository agentRepository;
-    private final PhysicalCashPositionRepository
-            physicalCashPositionRepository;
-    private final ProviderBalanceRepository
-            providerBalanceRepository;
-    private final SimulatedTransactionRepository
-            simulatedTransactionRepository;
+    private final PhysicalCashPositionRepository physicalCashPositionRepository;
+    private final ProviderBalanceRepository providerBalanceRepository;
+    private final SimulatedTransactionRepository simulatedTransactionRepository;
+    private final ProviderDataHealthRepository providerDataHealthRepository;
     private final LiquidityRateCalculator liquidityRateCalculator;
     private final Clock clock;
 
@@ -86,17 +90,6 @@ public class LiquidityForecastService {
                                 )
                         );
 
-        List<LiquidityResourceForecastResponse> forecasts =
-                new ArrayList<>();
-
-        forecasts.add(
-                buildPhysicalCashForecast(
-                        physicalCashPosition,
-                        recentTransactions,
-                        now
-                )
-        );
-
         List<ProviderBalance> providerBalances =
                 providerBalanceRepository
                         .findAllByAgentAgentCode(agentCode)
@@ -109,6 +102,39 @@ public class LiquidityForecastService {
                                 )
                         )
                         .toList();
+
+        List<ProviderDataHealth> dataHealthRecords =
+                providerDataHealthRepository
+                        .findAllByAgentAgentCode(agentCode);
+
+        Map<String, ProviderDataHealth> healthByProvider =
+                dataHealthRecords.stream()
+                        .collect(
+                                Collectors.toMap(
+                                        health ->
+                                                health.getProvider()
+                                                        .getProviderCode(),
+                                        Function.identity()
+                                )
+                        );
+
+        ProviderDataHealthStatus aggregateDataHealth =
+                determineAggregateDataHealth(
+                        providerBalances,
+                        healthByProvider
+                );
+
+        List<LiquidityResourceForecastResponse> forecasts =
+                new ArrayList<>();
+
+        forecasts.add(
+                buildPhysicalCashForecast(
+                        physicalCashPosition,
+                        recentTransactions,
+                        now,
+                        aggregateDataHealth
+                )
+        );
 
         for (ProviderBalance providerBalance : providerBalances) {
             List<SimulatedTransaction> providerTransactions =
@@ -124,11 +150,28 @@ public class LiquidityForecastService {
                             )
                             .toList();
 
+            ProviderDataHealthStatus providerHealthStatus =
+                    healthByProvider
+                            .containsKey(
+                                    providerBalance
+                                            .getProvider()
+                                            .getProviderCode()
+                            )
+                            ? healthByProvider
+                                    .get(
+                                            providerBalance
+                                                    .getProvider()
+                                                    .getProviderCode()
+                                    )
+                                    .getStatus()
+                            : ProviderDataHealthStatus.MISSING;
+
             forecasts.add(
                     buildProviderForecast(
                             providerBalance,
                             providerTransactions,
-                            now
+                            now,
+                            providerHealthStatus
                     )
             );
         }
@@ -144,7 +187,8 @@ public class LiquidityForecastService {
     buildPhysicalCashForecast(
             PhysicalCashPosition cashPosition,
             List<SimulatedTransaction> transactions,
-            Instant now
+            Instant now,
+            ProviderDataHealthStatus dataHealthStatus
     ) {
         return buildForecast(
                 LiquidityResourceType.PHYSICAL_CASH,
@@ -152,7 +196,8 @@ public class LiquidityForecastService {
                 "Shared Physical Cash",
                 cashPosition.getCashBalance(),
                 transactions,
-                now
+                now,
+                dataHealthStatus
         );
     }
 
@@ -160,7 +205,8 @@ public class LiquidityForecastService {
     buildProviderForecast(
             ProviderBalance providerBalance,
             List<SimulatedTransaction> transactions,
-            Instant now
+            Instant now,
+            ProviderDataHealthStatus dataHealthStatus
     ) {
         return buildForecast(
                 LiquidityResourceType.PROVIDER_E_MONEY,
@@ -169,7 +215,8 @@ public class LiquidityForecastService {
                         + " E-Money",
                 providerBalance.getEMoneyBalance(),
                 transactions,
-                now
+                now,
+                dataHealthStatus
         );
     }
 
@@ -179,7 +226,8 @@ public class LiquidityForecastService {
             String displayName,
             BigDecimal currentBalance,
             List<SimulatedTransaction> transactions,
-            Instant now
+            Instant now,
+            ProviderDataHealthStatus dataHealthStatus
     ) {
         BigDecimal rate15 =
                 liquidityRateCalculator.calculateConsumptionRate(
@@ -239,16 +287,38 @@ public class LiquidityForecastService {
         LiquidityPressureStatus status =
                 determineStatus(projectedRunwayMinutes);
 
+        if (
+                dataHealthStatus
+                        == ProviderDataHealthStatus.MISSING
+                || dataHealthStatus
+                        == ProviderDataHealthStatus.CONFLICTING
+        ) {
+            status = LiquidityPressureStatus.DATA_UNCERTAIN;
+        }
+
         int recentTransactionCount = transactions.size();
 
-        int confidenceScore =
+        int baseConfidenceScore =
                 calculateConfidenceScore(
                         transactions,
                         now
                 );
 
+        int confidenceScore =
+                adjustConfidenceForDataHealth(
+                        baseConfidenceScore,
+                        dataHealthStatus
+                );
+
         ForecastConfidence confidence =
                 toConfidenceLevel(confidenceScore);
+
+        String uncertainty =
+                buildUncertaintyMessage(
+                        resourceType,
+                        displayName,
+                        dataHealthStatus
+                );
 
         List<String> explanation =
                 buildExplanation(
@@ -258,6 +328,10 @@ public class LiquidityForecastService {
                         recentTransactionCount,
                         status
                 );
+
+        if (uncertainty != null) {
+            explanation.add(uncertainty);
+        }
 
         return new LiquidityResourceForecastResponse(
                 resourceType,
@@ -274,6 +348,8 @@ public class LiquidityForecastService {
                 confidence,
                 confidenceScore,
                 recentTransactionCount,
+                dataHealthStatus,
+                uncertainty,
                 explanation
         );
     }
@@ -371,6 +447,33 @@ public class LiquidityForecastService {
         return Math.min(score, 100);
     }
 
+    private int adjustConfidenceForDataHealth(
+            int baseScore,
+            ProviderDataHealthStatus status
+    ) {
+        return switch (status) {
+            case LIVE -> baseScore;
+
+            case DELAYED ->
+                    Math.max(
+                            baseScore - 20,
+                            0
+                    );
+
+            case MISSING ->
+                    Math.min(
+                            baseScore,
+                            35
+                    );
+
+            case CONFLICTING ->
+                    Math.min(
+                            baseScore,
+                            30
+                    );
+        };
+    }
+
     private boolean hasTransactionSince(
             List<SimulatedTransaction> transactions,
             Instant from
@@ -394,6 +497,110 @@ public class LiquidityForecastService {
         }
 
         return ForecastConfidence.LOW;
+    }
+
+    private ProviderDataHealthStatus determineAggregateDataHealth(
+            List<ProviderBalance> providerBalances,
+            Map<String, ProviderDataHealth> healthByProvider
+    ) {
+        boolean missing = providerBalances.stream()
+                .anyMatch(balance ->
+                        !healthByProvider.containsKey(
+                                balance.getProvider()
+                                        .getProviderCode()
+                        )
+                );
+
+        if (missing) {
+            return ProviderDataHealthStatus.MISSING;
+        }
+
+        boolean conflicting = healthByProvider.values()
+                .stream()
+                .anyMatch(health ->
+                        health.getStatus()
+                                == ProviderDataHealthStatus.CONFLICTING
+                );
+
+        if (conflicting) {
+            return ProviderDataHealthStatus.CONFLICTING;
+        }
+
+        boolean providerMissing = healthByProvider.values()
+                .stream()
+                .anyMatch(health ->
+                        health.getStatus()
+                                == ProviderDataHealthStatus.MISSING
+                );
+
+        if (providerMissing) {
+            return ProviderDataHealthStatus.MISSING;
+        }
+
+        boolean delayed = healthByProvider.values()
+                .stream()
+                .anyMatch(health ->
+                        health.getStatus()
+                                == ProviderDataHealthStatus.DELAYED
+                );
+
+        if (delayed) {
+            return ProviderDataHealthStatus.DELAYED;
+        }
+
+        return ProviderDataHealthStatus.LIVE;
+    }
+
+    private String buildUncertaintyMessage(
+            LiquidityResourceType resourceType,
+            String resourceName,
+            ProviderDataHealthStatus status
+    ) {
+        return switch (status) {
+            case LIVE -> null;
+
+            case DELAYED -> {
+                if (
+                        resourceType
+                                == LiquidityResourceType.PHYSICAL_CASH
+                ) {
+                    yield "One or more provider feeds are delayed. "
+                            + "Shared physical cash forecast confidence is reduced.";
+                }
+
+                yield resourceName
+                        + " uses delayed provider data. "
+                        + "Forecast confidence is reduced.";
+            }
+
+            case MISSING -> {
+                if (
+                        resourceType
+                                == LiquidityResourceType.PHYSICAL_CASH
+                ) {
+                    yield "One or more provider feeds are missing. "
+                            + "A definitive shared cash forecast is withheld pending data recovery.";
+                }
+
+                yield resourceName
+                        + " provider data is missing. "
+                        + "A definitive shortage interpretation is withheld pending data recovery.";
+            }
+
+            case CONFLICTING -> {
+                if (
+                        resourceType
+                                == LiquidityResourceType.PHYSICAL_CASH
+                ) {
+                    yield "One or more provider feeds contain conflicting data. "
+                            + "High-confidence shared cash interpretation is withheld pending review.";
+                }
+
+                yield resourceName
+                        + " provider data is conflicting. "
+                        + "High-confidence interpretation is withheld pending data review.";
+            }
+        };
     }
 
     private List<String> buildExplanation(
