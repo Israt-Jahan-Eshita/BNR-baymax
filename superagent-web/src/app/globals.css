@@ -312,3 +312,60 @@ body {
 .animate-in {
   animation: fadeIn 0.3s ease forwards;
 }
+
+/* ===== DARK MODE OVERRIDES ===== */
+.dark {
+  --bg-page: #1e293b;
+  --bg-card: #1e293b;
+  --bg-sidebar: #1e293b;
+  
+  --text-heading: #f8fafc;
+  --text-body: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-inverse: #0f172a;
+  
+  --border: rgba(255, 255, 255, 0.05);
+  --border-light: rgba(255, 255, 255, 0.1);
+
+  /* Adjusted shadows for dark slate */
+  --shadow-light: #2b394f;
+  --shadow-dark: #111927;
+
+  /* Provider colors - slightly dimmed for dark mode but keeping identity */
+  --bkash: #ec4899;
+  --bkash-light: rgba(236, 72, 153, 0.1);
+  --nagad: #f97316;
+  --nagad-light: rgba(249, 115, 22, 0.1);
+  --rocket: #8b5cf6;
+  --rocket-light: rgba(139, 92, 246, 0.1);
+  --cash: #10b981;
+  --cash-light: rgba(16, 185, 129, 0.1);
+
+  /* Status Colors */
+  --danger: #ef4444;
+  --danger-light: rgba(239, 68, 68, 0.1);
+  --warning: #f59e0b;
+  --warning-light: rgba(245, 158, 11, 0.1);
+  --info: #3b82f6;
+  --info-light: rgba(59, 130, 246, 0.1);
+  --success: #10b981;
+  --success-light: rgba(16, 185, 129, 0.1);
+}
+
+/* Force very bright fonts in dark mode across all Tailwind text-gray classes */
+.dark .text-gray-800,
+.dark .text-gray-900 {
+  color: #ffffff !important;
+}
+.dark .text-gray-700 {
+  color: #f8fafc !important;
+}
+.dark .text-gray-600 {
+  color: #f1f5f9 !important;
+}
+.dark .text-gray-500 {
+  color: #e2e8f0 !important;
+}
+.dark .text-gray-400 {
+  color: #cbd5e1 !important;
+}
