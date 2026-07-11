@@ -2,6 +2,7 @@ package com.bkash.baymax.superagent_api.service;
 
 import com.bkash.baymax.superagent_api.dto.request.CreateSimulatedTransactionRequest;
 import com.bkash.baymax.superagent_api.dto.response.SimulatedTransactionResponse;
+import com.bkash.baymax.superagent_api.event.TransactionPersistedEvent;
 import com.bkash.baymax.superagent_api.exception.InactiveResourceException;
 import com.bkash.baymax.superagent_api.exception.InsufficientLiquidityException;
 import com.bkash.baymax.superagent_api.exception.ResourceNotFoundException;
@@ -18,6 +19,7 @@ import com.bkash.baymax.superagent_api.repository.ProviderBalanceRepository;
 import com.bkash.baymax.superagent_api.repository.ProviderRepository;
 import com.bkash.baymax.superagent_api.repository.SimulatedTransactionRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,28 +35,73 @@ public class TransactionService {
 
     private final AgentRepository agentRepository;
     private final ProviderRepository providerRepository;
-    private final ProviderBalanceRepository providerBalanceRepository;
-    private final PhysicalCashPositionRepository physicalCashPositionRepository;
-    private final SimulatedTransactionRepository simulatedTransactionRepository;
+    private final PhysicalCashPositionRepository
+            physicalCashPositionRepository;
+    private final ProviderBalanceRepository
+            providerBalanceRepository;
+    private final SimulatedTransactionRepository
+            simulatedTransactionRepository;
     private final Clock clock;
+    private final ApplicationEventPublisher
+            applicationEventPublisher;
 
     @Transactional
     public SimulatedTransactionResponse createManualTransaction(
             CreateSimulatedTransactionRequest request
     ) {
-        String agentCode = normalizeCode(request.agentCode());
-        String providerCode = normalizeCode(request.providerCode());
+        String agentCode =
+                normalizeCode(
+                        request.agentCode(),
+                        "Agent code"
+                );
 
-        Agent agent = findActiveAgent(agentCode);
-        Provider provider = findActiveProvider(providerCode);
+        String providerCode =
+                normalizeCode(
+                        request.providerCode(),
+                        "Provider code"
+                );
+
+        Agent agent = agentRepository
+                .findByAgentCode(agentCode)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Agent not found: "
+                                        + agentCode
+                        )
+                );
+
+        if (!agent.isActive()) {
+            throw new InactiveResourceException(
+                    "Agent is inactive: "
+                            + agentCode
+            );
+        }
+
+        Provider provider = providerRepository
+                .findByProviderCode(providerCode)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Provider not found: "
+                                        + providerCode
+                        )
+                );
+
+        if (!provider.isActive()) {
+            throw new InactiveResourceException(
+                    "Provider is inactive: "
+                            + providerCode
+            );
+        }
 
         PhysicalCashPosition cashPosition =
                 physicalCashPositionRepository
                         .findByAgentAgentCode(agentCode)
-                        .orElseThrow(() -> new ResourceNotFoundException(
-                                "Physical cash position not found for agent "
-                                        + agentCode
-                        ));
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Physical cash position not found for agent "
+                                                + agentCode
+                                )
+                        );
 
         ProviderBalance providerBalance =
                 providerBalanceRepository
@@ -62,21 +109,25 @@ public class TransactionService {
                                 agentCode,
                                 providerCode
                         )
-                        .orElseThrow(() -> new ResourceNotFoundException(
-                                "Provider balance not found for agent "
-                                        + agentCode
-                                        + " and provider "
-                                        + providerCode
-                        ));
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Provider balance not found for agent "
+                                                + agentCode
+                                                + " and provider "
+                                                + providerCode
+                                )
+                        );
 
-        BigDecimal amount = request.amount();
-
-        applyBalanceMovement(
+        applyLiquidityMovement(
                 request.type(),
-                amount,
+                request.amount(),
                 cashPosition,
-                providerBalance
+                providerBalance,
+                providerCode
         );
+
+        Instant occurredAt =
+                Instant.now(clock);
 
         SimulatedTransaction transaction =
                 SimulatedTransaction.builder()
@@ -86,79 +137,78 @@ public class TransactionService {
                         .agent(agent)
                         .provider(provider)
                         .transactionType(request.type())
-                        .amount(amount)
-                        .occurredAt(Instant.now(clock))
+                        .amount(request.amount())
+                        .occurredAt(occurredAt)
                         .syntheticAccountId(
-                                request.syntheticAccountId().trim()
+                                request.syntheticAccountId()
+                                        .trim()
                         )
-                        .source(TransactionSource.MANUAL_SIMULATION)
+                        .source(
+                                TransactionSource.MANUAL_SIMULATION
+                        )
                         .build();
 
-        physicalCashPositionRepository.save(cashPosition);
-        providerBalanceRepository.save(providerBalance);
+        physicalCashPositionRepository.save(
+                cashPosition
+        );
+
+        providerBalanceRepository.save(
+                providerBalance
+        );
 
         SimulatedTransaction savedTransaction =
-                simulatedTransactionRepository.save(transaction);
+                simulatedTransactionRepository.save(
+                        transaction
+                );
 
-        return toResponse(
-                savedTransaction,
-                cashPosition,
-                providerBalance
+        applicationEventPublisher.publishEvent(
+                new TransactionPersistedEvent(
+                        agentCode,
+                        savedTransaction
+                                .getTransactionReference(),
+                        savedTransaction.getOccurredAt()
+                )
+        );
+
+        return new SimulatedTransactionResponse(
+                savedTransaction
+                        .getTransactionReference(),
+                agentCode,
+                providerCode,
+                savedTransaction
+                        .getTransactionType(),
+                savedTransaction.getAmount(),
+                savedTransaction
+                        .getSyntheticAccountId(),
+                savedTransaction.getOccurredAt(),
+                savedTransaction.getSource(),
+                cashPosition.getCashBalance(),
+                providerBalance.getEMoneyBalance()
         );
     }
 
-    private Agent findActiveAgent(String agentCode) {
-        Agent agent = agentRepository.findByAgentCode(agentCode)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Agent not found: " + agentCode
-                ));
-
-        if (!agent.isActive()) {
-            throw new InactiveResourceException(
-                    "Agent is inactive: " + agentCode
-            );
-        }
-
-        return agent;
-    }
-
-    private Provider findActiveProvider(String providerCode) {
-        Provider provider =
-                providerRepository.findByProviderCode(providerCode)
-                        .orElseThrow(() ->
-                                new ResourceNotFoundException(
-                                        "Provider not found: "
-                                                + providerCode
-                                )
-                        );
-
-        if (!provider.isActive()) {
-            throw new InactiveResourceException(
-                    "Provider is inactive: " + providerCode
-            );
-        }
-
-        return provider;
-    }
-
-    private void applyBalanceMovement(
+    private void applyLiquidityMovement(
             TransactionType transactionType,
             BigDecimal amount,
             PhysicalCashPosition cashPosition,
-            ProviderBalance providerBalance
+            ProviderBalance providerBalance,
+            String providerCode
     ) {
         switch (transactionType) {
-            case CASH_OUT -> applyCashOut(
-                    amount,
-                    cashPosition,
-                    providerBalance
-            );
+            case CASH_OUT ->
+                    applyCashOut(
+                            amount,
+                            cashPosition,
+                            providerBalance
+                    );
 
-            case CASH_IN -> applyCashIn(
-                    amount,
-                    cashPosition,
-                    providerBalance
-            );
+            case CASH_IN ->
+                    applyCashIn(
+                            amount,
+                            cashPosition,
+                            providerBalance,
+                            providerCode
+                    );
         }
     }
 
@@ -167,72 +217,79 @@ public class TransactionService {
             PhysicalCashPosition cashPosition,
             ProviderBalance providerBalance
     ) {
-        if (cashPosition.getCashBalance().compareTo(amount) < 0) {
+        if (
+                cashPosition
+                        .getCashBalance()
+                        .compareTo(amount) < 0
+        ) {
             throw new InsufficientLiquidityException(
-                    "Insufficient physical cash for CASH_OUT. "
-                            + "Available physical cash: "
-                            + cashPosition.getCashBalance()
+                    "Insufficient physical cash for CASH_OUT transaction"
             );
         }
 
         cashPosition.setCashBalance(
-                cashPosition.getCashBalance().subtract(amount)
+                cashPosition
+                        .getCashBalance()
+                        .subtract(amount)
         );
 
         providerBalance.setEMoneyBalance(
-                providerBalance.getEMoneyBalance().add(amount)
+                providerBalance
+                        .getEMoneyBalance()
+                        .add(amount)
         );
     }
 
     private void applyCashIn(
             BigDecimal amount,
             PhysicalCashPosition cashPosition,
-            ProviderBalance providerBalance
+            ProviderBalance providerBalance,
+            String providerCode
     ) {
-        if (providerBalance.getEMoneyBalance().compareTo(amount) < 0) {
+        if (
+                providerBalance
+                        .getEMoneyBalance()
+                        .compareTo(amount) < 0
+        ) {
             throw new InsufficientLiquidityException(
-                    "Insufficient provider e-money for CASH_IN. "
-                            + "Available provider e-money: "
-                            + providerBalance.getEMoneyBalance()
+                    "Insufficient "
+                            + providerCode
+                            + " e-money for CASH_IN transaction"
             );
         }
 
         cashPosition.setCashBalance(
-                cashPosition.getCashBalance().add(amount)
+                cashPosition
+                        .getCashBalance()
+                        .add(amount)
         );
 
         providerBalance.setEMoneyBalance(
-                providerBalance.getEMoneyBalance().subtract(amount)
+                providerBalance
+                        .getEMoneyBalance()
+                        .subtract(amount)
         );
-    }
-
-    private SimulatedTransactionResponse toResponse(
-            SimulatedTransaction transaction,
-            PhysicalCashPosition cashPosition,
-            ProviderBalance providerBalance
-    ) {
-        return new SimulatedTransactionResponse(
-                transaction.getTransactionReference(),
-                transaction.getAgent().getAgentCode(),
-                transaction.getProvider().getProviderCode(),
-                transaction.getTransactionType(),
-                transaction.getAmount(),
-                transaction.getSyntheticAccountId(),
-                transaction.getOccurredAt(),
-                transaction.getSource(),
-                cashPosition.getCashBalance(),
-                providerBalance.getEMoneyBalance()
-        );
-    }
-
-    private String normalizeCode(String code) {
-        return code.trim().toUpperCase(Locale.ROOT);
     }
 
     private String generateTransactionReference() {
         return "SIM-"
                 + UUID.randomUUID()
-                .toString()
+                        .toString()
+                        .toUpperCase(Locale.ROOT);
+    }
+
+    private String normalizeCode(
+            String code,
+            String fieldName
+    ) {
+        if (code == null || code.isBlank()) {
+            throw new IllegalArgumentException(
+                    fieldName + " is required"
+            );
+        }
+
+        return code
+                .trim()
                 .toUpperCase(Locale.ROOT);
     }
 }

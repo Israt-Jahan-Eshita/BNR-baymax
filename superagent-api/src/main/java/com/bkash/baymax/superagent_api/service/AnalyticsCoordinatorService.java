@@ -5,6 +5,8 @@ import com.bkash.baymax.superagent_api.analytics.DetectedSignal;
 import com.bkash.baymax.superagent_api.dto.response.AlertDetailResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +20,9 @@ public class AnalyticsCoordinatorService {
 
     private final AlertService alertService;
 
+    @Transactional(
+            propagation = Propagation.REQUIRES_NEW
+    )
     public List<AlertDetailResponse> evaluateAnomalies(
             String agentCode
     ) {
@@ -33,6 +38,6 @@ public class AnalyticsCoordinatorService {
                     .ifPresent(createdAlerts::add);
         }
 
-        return createdAlerts;
+        return List.copyOf(createdAlerts);
     }
 }
