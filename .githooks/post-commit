@@ -1,0 +1,8 @@
+#!/bin/sh
+echo "Running SonarQube analysis for the new commit..."
+REPO_ROOT=$(git rev-parse --show-toplevel)
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$REPO_ROOT/scripts/sonar-analyze-head.ps1"
+if [ $? -ne 0 ]; then
+    echo "WARNING: SonarQube analysis failed or was skipped."
+    echo "The commit exists locally but lacks the success marker and will be blocked by pre-push."
+fi

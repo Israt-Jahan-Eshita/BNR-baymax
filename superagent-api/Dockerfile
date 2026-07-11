@@ -1,9 +1,11 @@
 # Stage 1: Build the application
-FROM maven:3.9.6-eclipse-temurin-21-alpine AS builder
+FROM eclipse-temurin:21-jdk-alpine AS builder
 WORKDIR /app
-COPY pom.xml .
+COPY .mvn/ .mvn
+COPY mvnw pom.xml ./
+RUN ./mvnw dependency:go-offline
 COPY src ./src
-RUN mvn clean package -DskipTests
+RUN ./mvnw clean package -DskipTests
 
 # Stage 2: Run the application
 FROM eclipse-temurin:21-jre-alpine

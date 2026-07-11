@@ -158,7 +158,6 @@ export interface AgentBalanceResponse {
   agentCode: string;
   physicalCashBalance: number;
   providerBalances: ProviderBalanceRecord[];
-  totalEMoneyBalance: number;
 }
 
 export interface ProviderBalanceRecord {
@@ -189,8 +188,8 @@ export interface LiquidityResourceForecast {
 
 export interface LiquidityForecastResponse {
   agentCode: string;
-  forecasts: LiquidityResourceForecast[];
-  forecastedAt: string;
+  resources: LiquidityResourceForecast[];
+  generatedAt: string;
 }
 
 export type CaseCreationSource = "AUTO_ALERT_POLICY" | "MANUAL_OPERATOR";

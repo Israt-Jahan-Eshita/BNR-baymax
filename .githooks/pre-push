@@ -1,0 +1,73 @@
+#!/bin/sh
+# pre-push hook
+# Enforces: every outgoing non-merge commit must have
+#   1. A "Prompt:" line in the commit message
+#   2. A .git/sonar-passed/<FULL_SHA> marker file
+
+z40=0000000000000000000000000000000000000000
+REPO_ROOT=$(git rev-parse --show-toplevel)
+FAIL=0
+MISSING_MARKER=""
+MISSING_PROMPT=""
+
+while read local_ref local_sha remote_ref remote_sha
+do
+    # Handle delete (local SHA all zeros) - nothing to check
+    if [ "$local_sha" = "$z40" ]; then
+        continue
+    fi
+
+    if [ "$remote_sha" = "$z40" ]; then
+        # New branch: check all commits reachable from local_sha that don't exist in any remote-tracking ref
+        range="$local_sha --not $(git for-each-ref --format='%(objectname)' refs/remotes/ 2>/dev/null)"
+        commits=$(git rev-list --no-merges $range 2>/dev/null)
+        if [ -z "$commits" ]; then
+            # Fallback: new branch with no remote tracking refs at all
+            commits=$(git rev-list --no-merges "$local_sha" 2>/dev/null)
+        fi
+    else
+        # Update existing branch: check only new commits
+        commits=$(git rev-list --no-merges "${remote_sha}..${local_sha}" 2>/dev/null)
+    fi
+
+    for commit in $commits; do
+        # 1. Check for Prompt: metadata
+        prompt_line=$(git log -1 --format="%B" "$commit" | grep -i "^Prompt:")
+        if [ -z "$prompt_line" ]; then
+            MISSING_PROMPT="$MISSING_PROMPT $commit"
+            FAIL=1
+        fi
+
+        # 2. Check for Sonar success marker
+        if [ ! -f "$REPO_ROOT/.git/sonar-passed/$commit" ]; then
+            MISSING_MARKER="$MISSING_MARKER $commit"
+            FAIL=1
+        fi
+    done
+done
+
+if [ $FAIL -ne 0 ]; then
+    echo ""
+    echo "=========================================="
+    echo "PUSH BLOCKED — Quality Gate Violations"
+    echo "=========================================="
+    if [ -n "$MISSING_PROMPT" ]; then
+        echo ""
+        echo "Commits missing 'Prompt:' in message:"
+        for sha in $MISSING_PROMPT; do
+            echo "  - $sha: $(git log -1 --format='%s' $sha)"
+        done
+    fi
+    if [ -n "$MISSING_MARKER" ]; then
+        echo ""
+        echo "Commits not analyzed by SonarQube (no .git/sonar-passed/<SHA>):"
+        for sha in $MISSING_MARKER; do
+            echo "  - $sha: $(git log -1 --format='%s' $sha)"
+        done
+        echo ""
+        echo "To analyze, run: powershell -File scripts/sonar-analyze-head.ps1"
+    fi
+    echo ""
+    exit 1
+fi
+exit 0
