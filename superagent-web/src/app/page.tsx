@@ -159,8 +159,8 @@ export default function Dashboard() {
           )}
 
           {/* SUMMARY METRICS */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="neu-raised p-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="neu-raised p-8">
               <div className="flex items-center justify-between mb-4">
                 <span className="metric-label">Total Liquidity</span>
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center neu-inset" style={{ color: "var(--info)" }}><IconActivity /></div>
@@ -169,7 +169,7 @@ export default function Dashboard() {
               <p className="text-xs text-gray-500 mt-2 font-medium">Cash + All provider e-money combined</p>
             </div>
 
-            <div className="neu-raised p-6">
+            <div className="neu-raised p-8">
               <div className="flex items-center justify-between mb-4">
                 <span className="metric-label">Physical Cash</span>
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center neu-inset" style={{ color: "var(--cash)" }}><IconCash /></div>
@@ -178,7 +178,7 @@ export default function Dashboard() {
               <p className="text-xs text-gray-500 mt-2 font-medium">Shared across all providers</p>
             </div>
 
-            <div className="neu-raised p-6">
+            <div className="neu-raised p-8">
               <div className="flex items-center justify-between mb-4">
                 <span className="metric-label">Total E-Money</span>
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center neu-inset" style={{ color: "var(--bkash)" }}><IconCash /></div>
@@ -187,7 +187,7 @@ export default function Dashboard() {
               <p className="text-xs text-gray-500 mt-2 font-medium">Sum of 3 provider balances</p>
             </div>
 
-            <div className="neu-raised p-6">
+            <div className="neu-raised p-8">
               <div className="flex items-center justify-between mb-4">
                 <span className="metric-label">Transactions Today</span>
                 <div className="w-8 h-8 rounded-lg flex items-center justify-center neu-inset" style={{ color: "var(--warning)" }}><IconUsers /></div>
@@ -198,12 +198,12 @@ export default function Dashboard() {
           </div>
 
           {/* PROVIDER BALANCES */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {data.providers.map((p: any) => {
               const cfg = PROVIDER_CONFIG[p.name] || PROVIDER_CONFIG.bKash;
               const isLow = p.capacity < 40;
               return (
-                <div key={p.name} className="neu-raised card-interactive p-6 border-l-4" style={{ borderLeftColor: cfg.color }}>
+                <div key={p.name} className="neu-raised card-interactive p-8 border-l-4" style={{ borderLeftColor: cfg.color }}>
                   <div className="flex items-center justify-between mb-5">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm text-white" style={{ background: cfg.color, boxShadow: `4px 4px 8px rgba(0,0,0,0.1)` }}>
@@ -249,7 +249,7 @@ export default function Dashboard() {
 
           {/* LIQUIDITY FORECAST */}
           {data.liquidityForecast && (
-            <div className="neu-raised p-6">
+            <div className="neu-raised p-8">
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <h3 className="font-bold text-gray-800 text-lg">Liquidity Forecast</h3>
