@@ -7,8 +7,10 @@ import { getDashboard } from "@/lib/api/dashboard";
 import { getValidationMetrics } from "@/lib/api/validation";
 import { 
   DashboardAggregateResponse, 
-  ValidationMetricsResponse 
+  ValidationMetricsResponse,
+  PressureStatus
 } from "@/domain/models";
+import AIChatPanel from "@/components/AIChatPanel";
 
 /* ===== SVG Icons ===== */
 function IconCash() {
@@ -105,6 +107,7 @@ export default function Dashboard() {
   const { balances, forecast, dataHealth, recentAlerts, recentCases } = dashboard;
   
   const activeCriticalAlerts = recentAlerts.alerts.filter(a => a.severity === "CRITICAL");
+  const totalEMoney = balances.providerBalances.reduce((sum, pb) => sum + pb.eMoneyBalance, 0);
 
   return (
     <div className="p-6 lg:p-8 max-w-[1600px] mx-auto space-y-8">
@@ -175,7 +178,7 @@ export default function Dashboard() {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <span className="metric-label">Informational Provider E-Money Total</span>
-                <div className="metric-value text-gray-800 mt-2">৳{balances.totalEMoneyBalance.toLocaleString("en-BD")}</div>
+                <div className="metric-value text-gray-800 mt-2">৳{totalEMoney.toLocaleString("en-BD")}</div>
                 <p className="text-xs text-gray-500 mt-2 font-bold bg-gray-100 dark:bg-gray-800 inline-block px-2 py-1 rounded">Provider funds remain separate.</p>
               </div>
               <div className="w-8 h-8 rounded-lg flex items-center justify-center neu-inset text-blue-500"><IconActivity /></div>
@@ -207,11 +210,11 @@ export default function Dashboard() {
           <span className="badge badge-info">{t("dash.predictive")}</span>
         </div>
         
-        {forecast.forecasts.length === 0 ? (
+        {forecast.resources.length === 0 ? (
           <div className="text-sm font-bold text-gray-500 p-4 text-center">Stable / no active depletion forecast.</div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {forecast.forecasts.map(f => {
+            {forecast.resources.map(f => {
               const cfg = f.providerCode ? PROVIDER_CONFIG[f.providerCode] : null;
               const color = cfg ? cfg.color : "#4b5563";
               return (

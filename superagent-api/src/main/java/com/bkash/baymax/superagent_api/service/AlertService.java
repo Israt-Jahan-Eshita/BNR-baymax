@@ -30,6 +30,7 @@ public class AlertService {
     private final AlertRepository alertRepository;
     private final Clock clock;
     private final ApplicationEventPublisher applicationEventPublisher;
+    private final AiExplanationService aiExplanationService;
 
     @Transactional
     public Optional<AlertDetailResponse> createIfAbsent(
@@ -76,6 +77,9 @@ public class AlertService {
                 )
         );
 
+        // Async AI Enrichment
+        aiExplanationService.enrichAlertWithAi(saved.getAlertCode());
+
         return Optional.of(
                 toDetailResponse(saved)
         );
@@ -107,6 +111,14 @@ public class AlertService {
                 alert.getSafeNextStep(),
                 alert.getWindowStart(),
                 alert.getWindowEnd(),
+                alert.getAiExplanation(),
+                alert.getAiRiskAssessment(),
+                alert.getAiRecommendedAction(),
+                alert.getMlReviewProbability(),
+                alert.getMlRequiresReview(),
+                alert.getMlModelVersion(),
+                alert.getMlSelectedThreshold(),
+                alert.getEventContextSummary(),
                 alert.getDetectedAt(),
                 alert.getCreatedAt()
         );

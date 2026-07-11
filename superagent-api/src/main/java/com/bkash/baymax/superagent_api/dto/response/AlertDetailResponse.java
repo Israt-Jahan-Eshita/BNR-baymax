@@ -25,6 +25,14 @@ public record AlertDetailResponse(
         String safeNextStep,
         Instant windowStart,
         Instant windowEnd,
+        String aiExplanation,
+        String aiRiskAssessment,
+        String aiRecommendedAction,
+        Double mlReviewProbability,
+        Boolean mlRequiresReview,
+        String mlModelVersion,
+        Double mlSelectedThreshold,
+        String eventContextSummary,
         Instant detectedAt,
         Instant createdAt
 

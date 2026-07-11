@@ -62,7 +62,7 @@ class AlertServiceTest {
         when(alertRepository.existsByAlertFingerprint(anyString())).thenReturn(false);
         when(alertRepository.save(any(Alert.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        AlertService service = new AlertService(alertRepository, Clock.fixed(NOW, ZoneOffset.UTC), applicationEventPublisher);
+        AlertService service = new AlertService(alertRepository, Clock.fixed(NOW, ZoneOffset.UTC), applicationEventPublisher, org.mockito.Mockito.mock(AiExplanationService.class));
         Optional<AlertDetailResponse> response = service.createIfAbsent(signal);
 
         assertTrue(response.isPresent());
@@ -85,7 +85,7 @@ class AlertServiceTest {
 
         when(alertRepository.existsByAlertFingerprint(anyString())).thenReturn(true);
 
-        AlertService service = new AlertService(alertRepository, Clock.fixed(NOW, ZoneOffset.UTC), applicationEventPublisher);
+        AlertService service = new AlertService(alertRepository, Clock.fixed(NOW, ZoneOffset.UTC), applicationEventPublisher, org.mockito.Mockito.mock(AiExplanationService.class));
         Optional<AlertDetailResponse> response = service.createIfAbsent(signal);
 
         assertFalse(response.isPresent());

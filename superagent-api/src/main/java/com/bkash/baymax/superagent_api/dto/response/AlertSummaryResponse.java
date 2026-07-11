@@ -18,6 +18,9 @@ public record AlertSummaryResponse(
         int confidenceScore,
         String title,
         String summary,
+        Double mlReviewProbability,
+        Boolean mlRequiresReview,
+        String mlModelVersion,
         Instant detectedAt
 
 ) {

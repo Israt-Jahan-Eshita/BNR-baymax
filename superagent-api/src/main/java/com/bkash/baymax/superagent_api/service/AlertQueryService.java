@@ -106,6 +106,9 @@ public class AlertQueryService {
                 alert.getConfidenceScore(),
                 alert.getTitle(),
                 alert.getSummary(),
+                alert.getMlReviewProbability(),
+                alert.getMlRequiresReview(),
+                alert.getMlModelVersion(),
                 alert.getDetectedAt()
         );
     }

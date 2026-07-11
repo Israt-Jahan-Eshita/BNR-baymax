@@ -193,6 +193,39 @@ public class Alert {
     private Instant windowEnd;
 
     @Column(
+            name = "ai_explanation",
+            length = 2000
+    )
+    private String aiExplanation;
+
+    @Column(
+            name = "ai_risk_assessment",
+            length = 500
+    )
+    private String aiRiskAssessment;
+
+    @Column(
+            name = "ai_recommended_action",
+            length = 500
+    )
+    private String aiRecommendedAction;
+
+    @Column(name = "ml_review_probability")
+    private Double mlReviewProbability;
+
+    @Column(name = "ml_requires_review")
+    private Boolean mlRequiresReview;
+
+    @Column(name = "ml_model_version")
+    private String mlModelVersion;
+
+    @Column(name = "ml_selected_threshold")
+    private Double mlSelectedThreshold;
+
+    @Column(name = "event_context_summary", length = 1000)
+    private String eventContextSummary;
+
+    @Column(
             name = "detected_at",
             nullable = false
     )

@@ -18,6 +18,7 @@ import com.bkash.baymax.superagent_api.repository.ProviderDataHealthRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.boot.CommandLineRunner;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -26,9 +27,14 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class DemoDataSeedService {
+public class DemoDataSeedService implements CommandLineRunner {
 
     private static final String DEMO_AGENT_CODE = "AGT-001";
+
+    @Override
+    public void run(String... args) throws Exception {
+        seedBaselineIfMissing();
+    }
 
     private final AgentRepository agentRepository;
     private final ProviderRepository providerRepository;
