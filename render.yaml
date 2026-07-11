@@ -1,0 +1,29 @@
+services:
+  # Backend Spring Boot Service
+  - type: web
+    name: bnr-baymax-api
+    env: docker
+    plan: free
+    dockerContext: superagent-api
+    dockerfilePath: superagent-api/Dockerfile
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: PORT
+        value: "8080"
+      - key: DATABASE_URL
+        sync: false # You will paste your Supabase URL in the Render Dashboard
+
+  # Frontend Next.js Service
+  - type: web
+    name: bnr-baymax-web
+    env: node
+    plan: free
+    buildCommand: "cd superagent-web && npm ci && npm run build"
+    startCommand: "cd superagent-web && npm run start"
+    envVars:
+      - key: NEXT_PUBLIC_API_BASE_URL
+        fromService:
+          type: web
+          name: bnr-baymax-api
+          envVarKey: RENDER_EXTERNAL_URL

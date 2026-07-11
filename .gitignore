@@ -20,3 +20,5 @@ secrets/
 
 # Logs
 *.log
+
+.scannerwork
