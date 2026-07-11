@@ -19,6 +19,7 @@ public class WebConfig implements WebMvcConfigurer {
         List<String> origins = new ArrayList<>();
         origins.add("http://localhost:3000");
         origins.add("http://127.0.0.1:3000");
+        origins.add("https://bnr-baymax-web.onrender.com");
 
         if (allowedOriginsEnv != null && !allowedOriginsEnv.isBlank()) {
             String[] parts = allowedOriginsEnv.split(",");
