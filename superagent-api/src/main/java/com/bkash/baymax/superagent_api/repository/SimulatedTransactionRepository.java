@@ -83,4 +83,13 @@ public interface SimulatedTransactionRepository
             Instant from,
             Instant to
     );
+
+    long countByScenarioRunId(
+            String scenarioRunId
+    );
+
+    List<SimulatedTransaction>
+    findAllByScenarioRunIdOrderByOccurredAtAsc(
+            String scenarioRunId
+    );
 }

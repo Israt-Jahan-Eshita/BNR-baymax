@@ -1,5 +1,6 @@
 package com.bkash.baymax.superagent_api.service;
 
+import com.bkash.baymax.superagent_api.dto.internal.ScenarioTransactionCommand;
 import com.bkash.baymax.superagent_api.dto.request.CreateSimulatedTransactionRequest;
 import com.bkash.baymax.superagent_api.dto.response.SimulatedTransactionResponse;
 import com.bkash.baymax.superagent_api.event.TransactionPersistedEvent;
@@ -49,15 +50,50 @@ public class TransactionService {
     public SimulatedTransactionResponse createManualTransaction(
             CreateSimulatedTransactionRequest request
     ) {
+        return processTransaction(
+                request.agentCode(),
+                request.providerCode(),
+                request.type(),
+                request.amount(),
+                request.syntheticAccountId(),
+                TransactionSource.MANUAL_SIMULATION,
+                null
+        );
+    }
+
+    @Transactional
+    public SimulatedTransactionResponse createScenarioTransaction(
+            ScenarioTransactionCommand command
+    ) {
+        return processTransaction(
+                command.agentCode(),
+                command.providerCode(),
+                command.type(),
+                command.amount(),
+                command.syntheticAccountId(),
+                TransactionSource.SCENARIO,
+                command.scenarioRunId()
+        );
+    }
+
+    private SimulatedTransactionResponse processTransaction(
+            String rawAgentCode,
+            String rawProviderCode,
+            TransactionType type,
+            BigDecimal amount,
+            String rawSyntheticAccountId,
+            TransactionSource source,
+            String scenarioRunId
+    ) {
         String agentCode =
                 normalizeCode(
-                        request.agentCode(),
+                        rawAgentCode,
                         "Agent code"
                 );
 
         String providerCode =
                 normalizeCode(
-                        request.providerCode(),
+                        rawProviderCode,
                         "Provider code"
                 );
 
@@ -119,8 +155,8 @@ public class TransactionService {
                         );
 
         applyLiquidityMovement(
-                request.type(),
-                request.amount(),
+                type,
+                amount,
                 cashPosition,
                 providerBalance,
                 providerCode
@@ -136,16 +172,15 @@ public class TransactionService {
                         )
                         .agent(agent)
                         .provider(provider)
-                        .transactionType(request.type())
-                        .amount(request.amount())
+                        .transactionType(type)
+                        .amount(amount)
                         .occurredAt(occurredAt)
                         .syntheticAccountId(
-                                request.syntheticAccountId()
+                                rawSyntheticAccountId
                                         .trim()
                         )
-                        .source(
-                                TransactionSource.MANUAL_SIMULATION
-                        )
+                        .source(source)
+                        .scenarioRunId(scenarioRunId)
                         .build();
 
         physicalCashPositionRepository.save(
