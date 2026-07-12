@@ -54,4 +54,17 @@ public interface AlertRepository
 
             Pageable pageable
     );
+
+    @Query("""
+            SELECT a
+            FROM Alert a
+            WHERE a.agent.agentCode = :agentCode
+              AND a.detectedAt >= :startTime
+              AND a.detectedAt <= :endTime
+            """)
+    java.util.List<Alert> findAlertsInWindow(
+            @Param("agentCode") String agentCode,
+            @Param("startTime") java.time.Instant startTime,
+            @Param("endTime") java.time.Instant endTime
+    );
 }

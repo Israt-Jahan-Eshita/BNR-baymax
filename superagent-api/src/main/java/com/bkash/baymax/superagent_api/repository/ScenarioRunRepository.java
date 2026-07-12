@@ -27,4 +27,6 @@ public interface ScenarioRunRepository extends JpaRepository<ScenarioRun, Long> 
             @Param("status") ScenarioRunStatus status,
             Pageable pageable
     );
+
+    java.util.List<ScenarioRun> findAllByStatus(ScenarioRunStatus status);
 }
