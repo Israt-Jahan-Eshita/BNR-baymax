@@ -49,7 +49,7 @@ class BaymaxReasoningServiceTest {
         BaymaxResponse expectedResponse = new BaymaxResponse("OK", "HIGH", Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
         when(objectMapper.readValue(mockResponseJson, BaymaxResponse.class)).thenReturn(expectedResponse);
 
-        BaymaxResponse response = reasoningService.analyze(agentCode, question);
+        BaymaxResponse response = reasoningService.analyze(agentCode, question, "English", "Professional Assistant");
 
         assertNotNull(response);
         assertEquals("OK", response.answer());
@@ -66,7 +66,7 @@ class BaymaxReasoningServiceTest {
         
         when(openAiService.getStructuredChatCompletion(anyString(), eq(question))).thenReturn("");
 
-        BaymaxResponse response = reasoningService.analyze(agentCode, question);
+        BaymaxResponse response = reasoningService.analyze(agentCode, question, "English", "Professional Assistant");
 
         assertNotNull(response);
         assertEquals("I am currently unable to process your request (Empty response).", response.answer());
@@ -80,7 +80,7 @@ class BaymaxReasoningServiceTest {
 
         when(contextService.buildContext(agentCode)).thenThrow(new RuntimeException("DB Error"));
 
-        BaymaxResponse response = reasoningService.analyze(agentCode, question);
+        BaymaxResponse response = reasoningService.analyze(agentCode, question, "English", "Professional Assistant");
 
         assertNotNull(response);
         assertTrue(response.answer().contains("Failed to analyze system state. Error: DB Error"));

@@ -28,10 +28,10 @@ class AiChatControllerTest {
 
     @Test
     void chat_success() {
-        AiChatRequest request = new AiChatRequest("A100", "Hello");
+        AiChatRequest request = new AiChatRequest("Hello", "A100", null, null);
         BaymaxResponse baymaxResponse = new BaymaxResponse("Response", "HIGH", Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
 
-        when(baymaxReasoningService.analyze(anyString(), anyString())).thenReturn(baymaxResponse);
+        when(baymaxReasoningService.analyze(anyString(), anyString(), anyString(), anyString())).thenReturn(baymaxResponse);
 
         ResponseEntity<AiChatResponse> responseEntity = aiChatController.chat(request);
         
@@ -41,10 +41,10 @@ class AiChatControllerTest {
 
     @Test
     void analyze_success() {
-        AiChatRequest request = new AiChatRequest("A100", "Hello");
+        AiChatRequest request = new AiChatRequest("A100", "Hello", null, null);
         BaymaxResponse baymaxResponse = new BaymaxResponse("Response", "HIGH", Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
 
-        when(baymaxReasoningService.analyze(anyString(), anyString())).thenReturn(baymaxResponse);
+        when(baymaxReasoningService.analyze(anyString(), anyString(), anyString(), anyString())).thenReturn(baymaxResponse);
 
         ResponseEntity<BaymaxResponse> responseEntity = aiChatController.analyze(request);
         

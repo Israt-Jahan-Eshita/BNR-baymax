@@ -19,13 +19,14 @@ public class BaymaxReasoningService {
     private final OpenAiService openAiService;
     private final ObjectMapper objectMapper;
 
-    public BaymaxResponse analyze(String agentCode, String question) {
+    public BaymaxResponse analyze(String agentCode, String question, String language, String persona) {
         try {
             BaymaxOperationalContext context = contextService.buildContext(agentCode);
             String contextJson = objectMapper.writeValueAsString(context);
 
             String systemPrompt = "You are BNR Baymax, an intelligent decision-support AI for bKash, Nagad, and Rocket super-agents in Bangladesh. "
-                    + "The user will ask you a question in English or Bangla. You must answer based ONLY on the following real-time JSON context of their operational state.\n"
+                    + "Your persona is: " + persona + ". You must reply strictly in this language: " + language + ".\n"
+                    + "The user will ask you a question. You must answer based ONLY on the following real-time JSON context of their operational state.\n"
                     + "If the answer is not in the context, say you don't know.\n"
                     + "The context includes 'whatIfProjections' for 20%, 50%, and 100% demand spikes. If the user asks a hypothetical or projection question, interpret these numbers and place your insights in the 'whatIfProjections' JSON array.\n"
                     + "You MUST return your response as a valid JSON object matching the following structure:\n"

@@ -7,6 +7,16 @@ public record AiChatRequest(
         String question,
         
         @NotBlank(message = "Agent code is required")
-        String agentCode
+        String agentCode,
+        
+        String language,
+        String persona
 ) {
+    public String language() {
+        return language == null || language.isBlank() ? "English" : language;
+    }
+    
+    public String persona() {
+        return persona == null || persona.isBlank() ? "Professional Assistant" : persona;
+    }
 }

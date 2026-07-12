@@ -21,13 +21,23 @@ public class AiChatController {
 
     @PostMapping("/chat")
     public ResponseEntity<AiChatResponse> chat(@Valid @RequestBody AiChatRequest request) {
-        BaymaxResponse baymaxResponse = baymaxReasoningService.analyze(request.agentCode(), request.question());
+        BaymaxResponse baymaxResponse = baymaxReasoningService.analyze(
+                request.agentCode(), 
+                request.question(),
+                request.language(),
+                request.persona()
+        );
         return ResponseEntity.ok(new AiChatResponse(baymaxResponse.answer()));
     }
 
     @PostMapping("/analyze")
     public ResponseEntity<BaymaxResponse> analyze(@Valid @RequestBody AiChatRequest request) {
-        BaymaxResponse baymaxResponse = baymaxReasoningService.analyze(request.agentCode(), request.question());
+        BaymaxResponse baymaxResponse = baymaxReasoningService.analyze(
+                request.agentCode(), 
+                request.question(),
+                request.language(),
+                request.persona()
+        );
         return ResponseEntity.ok(baymaxResponse);
     }
 }
