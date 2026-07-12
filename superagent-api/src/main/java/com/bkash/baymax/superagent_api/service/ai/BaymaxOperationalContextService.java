@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 public class BaymaxOperationalContextService {
 
     private final DashboardService dashboardService;
+    private final BaymaxWhatIfService whatIfService;
 
     @Transactional(readOnly = true)
     public BaymaxOperationalContext buildContext(String agentCode) {
@@ -67,6 +68,8 @@ public class BaymaxOperationalContextService {
                 ))
                 .collect(Collectors.toList());
 
+        var whatIfProjections = whatIfService.generateProjections(dashboard.forecast().resources());
+
         return new BaymaxOperationalContext(
                 agentContext,
                 sharedPhysicalCash,
@@ -74,6 +77,7 @@ public class BaymaxOperationalContextService {
                 activeAlerts,
                 providerDataHealth,
                 activeCases,
+                whatIfProjections,
                 dashboard.aggregatedAt()
         );
     }

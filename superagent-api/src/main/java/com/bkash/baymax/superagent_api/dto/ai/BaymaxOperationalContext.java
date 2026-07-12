@@ -11,6 +11,7 @@ public record BaymaxOperationalContext(
     List<AlertContext> activeAlerts,
     List<ProviderDataHealthContext> providerDataHealth,
     List<CaseContext> activeCases,
+    List<WhatIfProjectionContext> whatIfProjections,
     Instant generatedAt
 ) {
     public record AgentContext(String agentCode) {}
@@ -40,5 +41,12 @@ public record BaymaxOperationalContext(
         String owner, 
         String providerCode, 
         String recommendedAction
+    ) {}
+    public record WhatIfProjectionContext(
+        String resourceName,
+        Integer baselineRunwayMinutes,
+        Integer runwayWith20PercentDemandSpike,
+        Integer runwayWith50PercentDemandSpike,
+        Integer runwayWith100PercentDemandSpike
     ) {}
 }

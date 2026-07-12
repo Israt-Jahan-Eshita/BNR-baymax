@@ -25,6 +25,9 @@ class BaymaxOperationalContextServiceTest {
     @Mock
     private DashboardService dashboardService;
 
+    @Mock
+    private BaymaxWhatIfService whatIfService;
+
     @InjectMocks
     private BaymaxOperationalContextService contextService;
 
@@ -98,6 +101,7 @@ class BaymaxOperationalContextServiceTest {
         when(mockDashboard.recentCases()).thenReturn(cases);
 
         when(dashboardService.getDashboardAggregate(agentCode)).thenReturn(mockDashboard);
+        when(whatIfService.generateProjections(forecast.resources())).thenReturn(List.of());
 
         BaymaxOperationalContext context = contextService.buildContext(agentCode);
 
