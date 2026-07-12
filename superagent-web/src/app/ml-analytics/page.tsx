@@ -5,11 +5,12 @@ import {
   Activity, 
   AlertTriangle, 
   BrainCircuit, 
-  CheckCircle2, 
   Target, 
   TrendingUp,
-  Search
+  Search,
+  ExternalLink
 } from "lucide-react";
+import Link from "next/link";
 
 export default function MLAnalyticsPage() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -211,9 +212,9 @@ export default function MLAnalyticsPage() {
                       </span>
                     </td>
                     <td className="p-4">
-                      <button className="btn btn-sm btn-ghost border border-white/20 text-xs">
-                        {tx.status}
-                      </button>
+                      <Link href="/cases" className="btn btn-sm btn-ghost border border-white/20 text-xs flex items-center gap-1 hover:text-purple-500 hover:border-purple-500 transition-colors">
+                        Create Case <ExternalLink size={12} />
+                      </Link>
                     </td>
                   </tr>
                 ))}
