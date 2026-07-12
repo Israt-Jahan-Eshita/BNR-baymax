@@ -15,10 +15,10 @@ export interface AiChatResponse {
 export interface BaymaxResponse {
   answer: string;
   confidence: "HIGH" | "MEDIUM" | "LOW";
-  evidences: string[];
-  anomaliesDetected: string[];
+  reasoningSteps: string[];
+  evidenceList: string[];
+  actionItems: string[];
   whatIfProjections: string[];
-  recommendedActions: string[];
 }
 
 export async function askAi(request: AiChatRequest): Promise<AiChatResponse> {

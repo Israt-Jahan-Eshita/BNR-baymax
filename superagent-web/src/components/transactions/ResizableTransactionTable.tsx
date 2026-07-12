@@ -23,7 +23,7 @@ const DEFAULT_COLUMNS: TransactionColumn[] = [
 
 const LOCAL_STORAGE_KEY = "bnr-baymax-transaction-column-widths";
 
-export default function ResizableTransactionTable({ data }: { data: any[] }) {
+export default function ResizableTransactionTable({ data }: Readonly<{ data: any[] }>) {
   const { t } = useAppContext();
   
   // State for tracking widths

@@ -28,7 +28,7 @@ interface SimulationContextType {
 
 const SimulationContext = createContext<SimulationContextType | undefined>(undefined);
 
-export function SimulationProvider({ children }: { children: React.ReactNode }) {
+export function SimulationProvider({ children }: Readonly<{ children: React.ReactNode }>) {
   const [scenarioDefinitions, setScenarioDefinitions] = useState<ScenarioDefinition[]>([]);
   const [isLoadingDefinitions, setIsLoadingDefinitions] = useState(true);
   const [isRunningScenario, setIsRunningScenario] = useState(false);
@@ -140,18 +140,29 @@ export function SimulationProvider({ children }: { children: React.ReactNode }) 
     }
   };
 
+  const contextValue = React.useMemo(() => ({
+    scenarioDefinitions,
+    isLoadingDefinitions,
+    isRunningScenario,
+    scenarioError,
+    lastScenarioRun,
+    runScenario,
+    refreshScenarioDefinitions,
+    refreshCounter,
+    triggerManualRefresh
+  }), [
+    scenarioDefinitions,
+    isLoadingDefinitions,
+    isRunningScenario,
+    scenarioError,
+    lastScenarioRun,
+    refreshCounter,
+    triggerManualRefresh,
+    refreshScenarioDefinitions
+  ]);
+
   return (
-    <SimulationContext.Provider value={{
-      scenarioDefinitions,
-      isLoadingDefinitions,
-      isRunningScenario,
-      scenarioError,
-      lastScenarioRun,
-      runScenario,
-      refreshScenarioDefinitions,
-      refreshCounter,
-      triggerManualRefresh
-    }}>
+    <SimulationContext.Provider value={contextValue}>
       {children}
     </SimulationContext.Provider>
   );

@@ -15,7 +15,7 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-export function AppProvider({ children }: { children: React.ReactNode }) {
+export function AppProvider({ children }: Readonly<{ children: React.ReactNode }>) {
   const [theme, setTheme] = useState<Theme>("light");
   const [language, setLanguage] = useState<Language>("EN");
   const [mounted, setMounted] = useState(false);
@@ -50,12 +50,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setTheme(prev => prev === "light" ? "dark" : "light");
   };
 
-  const t = (key: string): string => {
-    return translations[language][key] || key;
-  };
+  const contextValue = React.useMemo(() => {
+    const t = (key: string): string => {
+      return translations[language][key] || key;
+    };
+    return { theme, toggleTheme, language, setLanguage, t };
+  }, [theme, language]);
 
   return (
-    <AppContext.Provider value={{ theme, toggleTheme, language, setLanguage, t }}>
+    <AppContext.Provider value={contextValue}>
       <div style={{ visibility: mounted ? "visible" : "hidden", display: "contents" }}>
         {children}
       </div>

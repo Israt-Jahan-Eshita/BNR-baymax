@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { analyzeWithBaymax, transcribeAudio, generateSpeechUrl, BaymaxResponse } from "@/lib/api/ai";
 import { DEMO_AGENT_CODE } from "@/context/SimulationContext";
-import { Bot, X, Send, Loader2, Mic, Square, Volume2, ShieldAlert, CheckCircle2, AlertTriangle, TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
+import { Bot, X, Send, Loader2, Mic, Square, Volume2, ShieldAlert, CheckCircle2, TrendingUp, ChevronDown, ChevronUp } from "lucide-react";
 
 type Message = {
   id: string;
@@ -17,7 +17,7 @@ type Message = {
 function StructuredDataDisplay({ data }: Readonly<{ data: BaymaxResponse }>) {
   const [expanded, setExpanded] = useState(false);
   
-  if (!data.evidences?.length && !data.anomaliesDetected?.length && !data.whatIfProjections?.length && !data.recommendedActions?.length) {
+  if (!data.evidenceList?.length && !data.reasoningSteps?.length && !data.whatIfProjections?.length && !data.actionItems?.length) {
     return null;
   }
 
@@ -28,7 +28,9 @@ function StructuredDataDisplay({ data }: Readonly<{ data: BaymaxResponse }>) {
         className="w-full flex items-center justify-between p-2 font-medium text-gray-700 bg-gray-100/50 hover:bg-gray-100 transition-colors"
       >
         <div className="flex items-center gap-2">
-          <ShieldAlert size={14} className={data.confidence === 'HIGH' ? 'text-green-600' : data.confidence === 'MEDIUM' ? 'text-amber-500' : 'text-red-500'} />
+          {data.confidence === 'HIGH' && <ShieldAlert size={14} className="text-green-600" />}
+          {data.confidence === 'MEDIUM' && <ShieldAlert size={14} className="text-amber-500" />}
+          {data.confidence !== 'HIGH' && data.confidence !== 'MEDIUM' && <ShieldAlert size={14} className="text-red-500" />}
           Confidence: {data.confidence}
         </div>
         {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -36,11 +38,11 @@ function StructuredDataDisplay({ data }: Readonly<{ data: BaymaxResponse }>) {
       
       {expanded && (
         <div className="p-3 flex flex-col gap-3">
-          {data.anomaliesDetected?.length > 0 && (
+          {data.reasoningSteps?.length > 0 && (
             <div>
-              <strong className="text-red-600 flex items-center gap-1 mb-1"><AlertTriangle size={12}/> Anomalies</strong>
+              <strong className="text-purple-600 flex items-center gap-1 mb-1"><Bot size={12}/> Reasoning Steps</strong>
               <ul className="list-disc pl-4 text-gray-600 space-y-1">
-                {data.anomaliesDetected.map((a, i) => <li key={`anomaly-${i}`}>{a}</li>)}
+                {data.reasoningSteps.map((a) => <li key={`reasoning-${a}`}>{a}</li>)}
               </ul>
             </div>
           )}
@@ -48,23 +50,23 @@ function StructuredDataDisplay({ data }: Readonly<{ data: BaymaxResponse }>) {
             <div>
               <strong className="text-blue-600 flex items-center gap-1 mb-1"><TrendingUp size={12}/> Projections</strong>
               <ul className="list-disc pl-4 text-gray-600 space-y-1">
-                {data.whatIfProjections.map((p, i) => <li key={`proj-${i}`}>{p}</li>)}
+                {data.whatIfProjections.map((p) => <li key={`proj-${p}`}>{p}</li>)}
               </ul>
             </div>
           )}
-          {data.evidences?.length > 0 && (
+          {data.evidenceList?.length > 0 && (
             <div>
               <strong className="text-gray-700 flex items-center gap-1 mb-1"><ShieldAlert size={12}/> Evidence</strong>
               <ul className="list-disc pl-4 text-gray-600 space-y-1">
-                {data.evidences.map((e, i) => <li key={`evi-${i}`}>{e}</li>)}
+                {data.evidenceList.map((e) => <li key={`evi-${e}`}>{e}</li>)}
               </ul>
             </div>
           )}
-          {data.recommendedActions?.length > 0 && (
+          {data.actionItems?.length > 0 && (
             <div>
-              <strong className="text-green-600 flex items-center gap-1 mb-1"><CheckCircle2 size={12}/> Recommendations</strong>
+              <strong className="text-green-600 flex items-center gap-1 mb-1"><CheckCircle2 size={12}/> Action Items</strong>
               <ul className="list-disc pl-4 text-gray-600 space-y-1">
-                {data.recommendedActions.map((r, i) => <li key={`rec-${i}`}>{r}</li>)}
+                {data.actionItems.map((r) => <li key={`rec-${r}`}>{r}</li>)}
               </ul>
             </div>
           )}
