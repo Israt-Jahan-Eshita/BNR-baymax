@@ -26,7 +26,7 @@ public class BaymaxOperationalContextService {
         var providers = dashboard.balances().providerBalances().stream()
                 .map(balance -> {
                     var forecastOpt = dashboard.forecast().resources().stream()
-                            .filter(f -> f.providerCode().equals(balance.providerCode()))
+                            .filter(f -> f.providerCode() != null && f.providerCode().equals(balance.providerCode()))
                             .findFirst();
                     
                     return new BaymaxOperationalContext.ProviderContext(
