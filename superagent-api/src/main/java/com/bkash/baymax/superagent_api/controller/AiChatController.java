@@ -2,7 +2,8 @@ package com.bkash.baymax.superagent_api.controller;
 
 import com.bkash.baymax.superagent_api.dto.request.AiChatRequest;
 import com.bkash.baymax.superagent_api.dto.response.AiChatResponse;
-import com.bkash.baymax.superagent_api.service.AiChatService;
+import com.bkash.baymax.superagent_api.dto.response.BaymaxResponse;
+import com.bkash.baymax.superagent_api.service.ai.BaymaxReasoningService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,11 +17,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AiChatController {
 
-    private final AiChatService aiChatService;
+    private final BaymaxReasoningService baymaxReasoningService;
 
     @PostMapping("/chat")
     public ResponseEntity<AiChatResponse> chat(@Valid @RequestBody AiChatRequest request) {
-        String answer = aiChatService.chat(request.agentCode(), request.question());
-        return ResponseEntity.ok(new AiChatResponse(answer));
+        BaymaxResponse baymaxResponse = baymaxReasoningService.analyze(request.agentCode(), request.question());
+        return ResponseEntity.ok(new AiChatResponse(baymaxResponse.answer()));
+    }
+
+    @PostMapping("/analyze")
+    public ResponseEntity<BaymaxResponse> analyze(@Valid @RequestBody AiChatRequest request) {
+        BaymaxResponse baymaxResponse = baymaxReasoningService.analyze(request.agentCode(), request.question());
+        return ResponseEntity.ok(baymaxResponse);
     }
 }

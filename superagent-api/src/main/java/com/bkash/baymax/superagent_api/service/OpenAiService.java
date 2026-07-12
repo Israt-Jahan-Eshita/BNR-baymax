@@ -17,6 +17,14 @@ public class OpenAiService {
     private final RestClient openAiRestClient;
 
     public String getChatCompletion(String systemPrompt, String userPrompt) {
+        return getChatCompletionInternal(systemPrompt, userPrompt, null);
+    }
+
+    public String getStructuredChatCompletion(String systemPrompt, String userPrompt) {
+        return getChatCompletionInternal(systemPrompt, userPrompt, new OpenAiChatRequest.ResponseFormat("json_object"));
+    }
+
+    private String getChatCompletionInternal(String systemPrompt, String userPrompt, OpenAiChatRequest.ResponseFormat responseFormat) {
         try {
             OpenAiChatRequest request = new OpenAiChatRequest(
                     "gpt-4o-mini", // Use gpt-4o-mini for speed and low cost
@@ -24,7 +32,8 @@ public class OpenAiService {
                             new OpenAiChatRequest.Message("system", systemPrompt),
                             new OpenAiChatRequest.Message("user", userPrompt)
                     ),
-                    0.2
+                    0.2,
+                    responseFormat
             );
 
             OpenAiChatResponse response = openAiRestClient.post()

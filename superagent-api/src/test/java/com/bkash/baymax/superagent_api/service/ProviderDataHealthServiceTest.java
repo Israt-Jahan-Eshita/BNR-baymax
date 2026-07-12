@@ -3,7 +3,7 @@ package com.bkash.baymax.superagent_api.service;
 import com.bkash.baymax.superagent_api.dto.response.ProviderDataHealthResponse;
 import com.bkash.baymax.superagent_api.model.Agent;
 import com.bkash.baymax.superagent_api.model.Provider;
-import com.bkash.baymax.superagent_api.model.ProviderDataHealth;
+
 import com.bkash.baymax.superagent_api.model.enums.ProviderDataHealthStatus;
 import com.bkash.baymax.superagent_api.repository.AgentRepository;
 import com.bkash.baymax.superagent_api.repository.ProviderDataHealthRepository;

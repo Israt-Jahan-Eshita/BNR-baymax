@@ -176,16 +176,12 @@ class TransactionServiceTest {
 
         prepareLookups();
 
+        TransactionService service = createService();
+        CreateSimulatedTransactionRequest req = request(TransactionType.CASH_OUT, "2500.00");
+
         assertThrows(
                 InsufficientLiquidityException.class,
-                () ->
-                        createService()
-                                .createManualTransaction(
-                                        request(
-                                                TransactionType.CASH_OUT,
-                                                "2500.00"
-                                        )
-                                )
+                () -> service.createManualTransaction(req)
         );
 
         assertEquals(
@@ -217,16 +213,12 @@ class TransactionServiceTest {
 
         prepareLookups();
 
+        TransactionService service = createService();
+        CreateSimulatedTransactionRequest req = request(TransactionType.CASH_IN, "2500.00");
+
         assertThrows(
                 InsufficientLiquidityException.class,
-                () ->
-                        createService()
-                                .createManualTransaction(
-                                        request(
-                                                TransactionType.CASH_IN,
-                                                "2500.00"
-                                        )
-                                )
+                () -> service.createManualTransaction(req)
         );
 
         assertEquals(
