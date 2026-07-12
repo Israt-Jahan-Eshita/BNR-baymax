@@ -22,10 +22,10 @@ function StructuredDataDisplay({ data }: Readonly<{ data: BaymaxResponse }>) {
   }
 
   return (
-    <div className="mt-3 text-xs bg-gray-50 border border-gray-100 rounded-lg overflow-hidden">
+    <div className="mt-3 text-xs bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-600 rounded-lg overflow-hidden">
       <button 
         onClick={() => setExpanded(!expanded)} 
-        className="w-full flex items-center justify-between p-2 font-medium text-gray-700 bg-gray-100/50 hover:bg-gray-100 transition-colors"
+        className="w-full flex items-center justify-between p-2 font-medium text-gray-700 dark:text-gray-200 bg-gray-100/50 dark:bg-slate-700/50 hover:bg-gray-100 dark:hover:bg-slate-700 transition-colors"
       >
         <div className="flex items-center gap-2">
           {data.confidence === 'HIGH' && <ShieldAlert size={14} className="text-green-600" />}
@@ -41,7 +41,7 @@ function StructuredDataDisplay({ data }: Readonly<{ data: BaymaxResponse }>) {
           {data.reasoningSteps?.length > 0 && (
             <div>
               <strong className="text-purple-600 flex items-center gap-1 mb-1"><Bot size={12}/> Reasoning Steps</strong>
-              <ul className="list-disc pl-4 text-gray-600 space-y-1">
+              <ul className="list-disc pl-4 text-gray-600 dark:text-gray-300 space-y-1">
                 {data.reasoningSteps.map((a) => <li key={`reasoning-${a}`}>{a}</li>)}
               </ul>
             </div>
@@ -49,7 +49,7 @@ function StructuredDataDisplay({ data }: Readonly<{ data: BaymaxResponse }>) {
           {data.whatIfProjections?.length > 0 && (
             <div>
               <strong className="text-blue-600 flex items-center gap-1 mb-1"><TrendingUp size={12}/> Projections</strong>
-              <ul className="list-disc pl-4 text-gray-600 space-y-1">
+              <ul className="list-disc pl-4 text-gray-600 dark:text-gray-300 space-y-1">
                 {data.whatIfProjections.map((p) => <li key={`proj-${p}`}>{p}</li>)}
               </ul>
             </div>
@@ -57,7 +57,7 @@ function StructuredDataDisplay({ data }: Readonly<{ data: BaymaxResponse }>) {
           {data.evidenceList?.length > 0 && (
             <div>
               <strong className="text-gray-700 flex items-center gap-1 mb-1"><ShieldAlert size={12}/> Evidence</strong>
-              <ul className="list-disc pl-4 text-gray-600 space-y-1">
+              <ul className="list-disc pl-4 text-gray-600 dark:text-gray-300 space-y-1">
                 {data.evidenceList.map((e) => <li key={`evi-${e}`}>{e}</li>)}
               </ul>
             </div>
@@ -65,7 +65,7 @@ function StructuredDataDisplay({ data }: Readonly<{ data: BaymaxResponse }>) {
           {data.actionItems?.length > 0 && (
             <div>
               <strong className="text-green-600 flex items-center gap-1 mb-1"><CheckCircle2 size={12}/> Action Items</strong>
-              <ul className="list-disc pl-4 text-gray-600 space-y-1">
+              <ul className="list-disc pl-4 text-gray-600 dark:text-gray-300 space-y-1">
                 {data.actionItems.map((r) => <li key={`rec-${r}`}>{r}</li>)}
               </ul>
             </div>
@@ -198,7 +198,7 @@ export default function AIChatPanel() {
       </button>
 
       <div 
-        className={`fixed bottom-6 right-6 w-96 max-w-[calc(100vw-32px)] bg-white rounded-2xl shadow-2xl border border-gray-100 flex flex-col z-50 overflow-hidden transition-all transform origin-bottom-right duration-300 ${isOpen ? 'scale-100 opacity-100' : 'scale-0 opacity-0 pointer-events-none'}`}
+        className={`fixed bottom-6 right-6 w-96 max-w-[calc(100vw-32px)] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-gray-100 dark:border-slate-700 flex flex-col z-50 overflow-hidden transition-all transform origin-bottom-right duration-300 ${isOpen ? 'scale-100 opacity-100' : 'scale-0 opacity-0 pointer-events-none'}`}
         style={{ height: "600px", maxHeight: "calc(100vh - 100px)" }}
       >
         <div className="bg-blue-600 p-4 flex flex-col gap-3 text-white">
@@ -233,10 +233,10 @@ export default function AIChatPanel() {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 bg-gray-50/50">
+        <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4 bg-gray-50/50 dark:bg-slate-800/50">
           {messages.map((msg, i) => (
             <div key={msg.id} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div className={`px-4 py-3 rounded-2xl max-w-[85%] text-sm ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-sm' : 'bg-white border border-gray-100 text-gray-800 shadow-sm rounded-bl-sm whitespace-pre-wrap'}`}>
+              <div className={`px-4 py-3 rounded-2xl max-w-[85%] text-sm ${msg.role === 'user' ? 'bg-blue-600 text-white rounded-br-sm' : 'bg-white dark:bg-slate-700 border border-gray-100 dark:border-slate-600 text-gray-800 dark:text-gray-100 shadow-sm rounded-bl-sm whitespace-pre-wrap'}`}>
                 {msg.text}
                 
                 {msg.role === 'ai' && (
@@ -257,19 +257,19 @@ export default function AIChatPanel() {
           ))}
           {isLoading && (
             <div className="flex justify-start">
-              <div className="px-4 py-2 bg-white border border-gray-100 text-gray-500 rounded-2xl rounded-bl-sm flex items-center gap-2 shadow-sm">
+              <div className="px-4 py-2 bg-white dark:bg-slate-700 border border-gray-100 dark:border-slate-600 text-gray-500 dark:text-gray-300 rounded-2xl rounded-bl-sm flex items-center gap-2 shadow-sm">
                 <Loader2 size={16} className="animate-spin" /> Baymax is analyzing...
               </div>
             </div>
           )}
         </div>
 
-        <div className="p-3 bg-white border-t border-gray-100">
+        <div className="p-3 bg-white dark:bg-slate-900 border-t border-gray-100 dark:border-slate-700">
           <form onSubmit={handleSubmit} className="flex gap-2 items-center">
             <button 
               type="button"
               onClick={toggleRecording}
-              className={`p-2 rounded-full transition-colors flex-shrink-0 ${isRecording ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+              className={`p-2 rounded-full transition-colors flex-shrink-0 ${isRecording ? 'bg-red-100 text-red-600 animate-pulse' : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-700'}`}
               title={isRecording ? "Stop recording" : "Record voice"}
             >
               {isRecording ? <Square size={18} className="fill-current" /> : <Mic size={18} />}
@@ -279,7 +279,7 @@ export default function AIChatPanel() {
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
               placeholder={isRecording ? "Recording..." : "Ask Deep Baymax..."}
-              className="flex-1 px-4 py-2 border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
+              className="flex-1 px-4 py-2 border border-gray-200 dark:border-slate-600 bg-transparent dark:text-white rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm"
               disabled={isLoading || isRecording}
             />
             <button 
