@@ -27,7 +27,7 @@ export default function MLAnalyticsPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          agentCode: "SA-DHAKA-100",
+          agentCode: "SA-DHAKA-001",
           providerCode: tx.provider,
           priority: tx.risk === 'HIGH' ? 'CRITICAL' : tx.risk === 'MEDIUM' ? 'HIGH' : 'MEDIUM',
           title: `ML Flag: ${tx.feature} detected in volume ${tx.amount}`,
