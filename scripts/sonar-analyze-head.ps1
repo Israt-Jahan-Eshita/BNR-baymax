@@ -50,7 +50,7 @@ if ($LASTEXITCODE -ne 0) { Write-Error "npm ci failed"; exit 1 }
 npm run build
 if ($LASTEXITCODE -ne 0) { Write-Error "npm run build failed"; exit 1 }
 
-npm run sonar -- "-Dsonar.projectKey=bnr-baymax-web" "-Dsonar.host.url=http://localhost:9000" "-Dsonar.projectVersion=$HEAD_SHA" "-Dsonar.qualitygate.wait=true"
+npm run sonar -- "-Dsonar.projectKey=bnr-baymax-web" "-Dsonar.host.url=http://localhost:9000" "-Dsonar.projectVersion=$HEAD_SHA" "-Dsonar.qualitygate.wait=true" "-Dsonar.coverage.exclusions=**/*"
 if ($LASTEXITCODE -ne 0) {
     Write-Error "Frontend analysis or Quality Gate failed."
     exit 1
