@@ -406,7 +406,8 @@ export default function Dashboard() {
           </div>
         )}
       </div>
-
+      
+      <AIChatPanel />
     </div>
   );
 }
