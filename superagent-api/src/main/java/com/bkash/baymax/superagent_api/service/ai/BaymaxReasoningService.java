@@ -10,6 +10,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -17,7 +20,10 @@ public class BaymaxReasoningService {
 
     private final BaymaxOperationalContextService contextService;
     private final OpenAiService openAiService;
-    private final ObjectMapper objectMapper;
+    
+    private final ObjectMapper objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
     public BaymaxResponse analyze(String agentCode, String question, String language, String persona) {
         try {

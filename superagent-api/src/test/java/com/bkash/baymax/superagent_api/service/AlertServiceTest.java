@@ -16,9 +16,7 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
-import org.mockito.Captor;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+
 
 import java.time.Clock;
 import java.time.Instant;
@@ -31,6 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -89,6 +88,6 @@ class AlertServiceTest {
         Optional<AlertDetailResponse> response = service.createIfAbsent(signal);
 
         assertFalse(response.isPresent());
-        verify(applicationEventPublisher, org.mockito.Mockito.never()).publishEvent(any());
+        verify(applicationEventPublisher, never()).publishEvent(any());
     }
 }

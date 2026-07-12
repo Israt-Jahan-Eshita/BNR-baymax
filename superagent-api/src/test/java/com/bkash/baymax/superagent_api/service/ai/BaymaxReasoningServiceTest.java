@@ -27,8 +27,6 @@ class BaymaxReasoningServiceTest {
     @Mock
     private OpenAiService openAiService;
 
-    @Mock
-    private ObjectMapper objectMapper;
 
     @InjectMocks
     private BaymaxReasoningService reasoningService;
@@ -41,13 +39,8 @@ class BaymaxReasoningServiceTest {
         BaymaxOperationalContext context = org.mockito.Mockito.mock(BaymaxOperationalContext.class);
 
         when(contextService.buildContext(agentCode)).thenReturn(context);
-        when(objectMapper.writeValueAsString(context)).thenReturn("{}");
-
         String mockResponseJson = "{\"answer\":\"OK\",\"confidence\":\"HIGH\",\"reasoningSteps\":[],\"evidenceList\":[],\"actionItems\":[],\"whatIfProjections\":[]}";
         when(openAiService.getStructuredChatCompletion(anyString(), eq(question))).thenReturn(mockResponseJson);
-
-        BaymaxResponse expectedResponse = new BaymaxResponse("OK", "HIGH", Collections.emptyList(), Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
-        when(objectMapper.readValue(mockResponseJson, BaymaxResponse.class)).thenReturn(expectedResponse);
 
         BaymaxResponse response = reasoningService.analyze(agentCode, question, "English", "Professional Assistant");
 
@@ -62,7 +55,6 @@ class BaymaxReasoningServiceTest {
         String question = "Status?";
 
         when(contextService.buildContext(agentCode)).thenReturn(org.mockito.Mockito.mock(BaymaxOperationalContext.class));
-        when(objectMapper.writeValueAsString(org.mockito.ArgumentMatchers.any())).thenReturn("{}");
         
         when(openAiService.getStructuredChatCompletion(anyString(), eq(question))).thenReturn("");
 
