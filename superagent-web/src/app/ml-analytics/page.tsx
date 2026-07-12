@@ -27,8 +27,8 @@ export default function MLAnalyticsPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          agentCode: "SA-DHAKA-001",
-          providerCode: tx.provider,
+          agentCode: "AGT-001",
+          providerCode: tx.provider, // "BKASH", "NAGAD", "ROCKET" - all seeded
           priority: tx.risk === 'HIGH' ? 'CRITICAL' : tx.risk === 'MEDIUM' ? 'HIGH' : 'MEDIUM',
           title: `ML Flag: ${tx.feature} detected in volume ${tx.amount}`,
           description: `The ML Random Forest model flagged transaction window ${tx.id} due to ${tx.feature}. System requires human compliance review to ensure no AML policy violation.`,
