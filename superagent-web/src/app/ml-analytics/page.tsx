@@ -8,12 +8,40 @@ import {
   Target, 
   TrendingUp,
   Search,
-  ExternalLink
+  ExternalLink,
+  Loader2
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function MLAnalyticsPage() {
   const [activeTab, setActiveTab] = useState("overview");
+  const [isCreating, setIsCreating] = useState<string | null>(null);
+  const router = useRouter();
+
+  const handleCreateCase = async (tx: any) => {
+    setIsCreating(tx.id);
+    try {
+      // POST to the backend manual case endpoint
+      await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/api/v1/cases/manual`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          agentCode: "SA-DHAKA-100",
+          providerCode: tx.provider,
+          priority: tx.risk === 'HIGH' ? 'CRITICAL' : tx.risk === 'MEDIUM' ? 'HIGH' : 'MEDIUM',
+          title: `ML Flag: ${tx.feature} detected in volume ${tx.amount}`,
+          description: `The ML Random Forest model flagged transaction window ${tx.id} due to ${tx.feature}. System requires human compliance review to ensure no AML policy violation.`,
+          recommendedNextStep: "Review the transaction logs and contact the agent for verification.",
+          createdBy: "ML Anomaly Detector"
+        })
+      });
+      router.push('/cases');
+    } catch (e) {
+      console.error(e);
+      setIsCreating(null);
+    }
+  };
 
   // Mocked ML Metrics from the Python Model output
   const mlMetrics = {
@@ -212,9 +240,14 @@ export default function MLAnalyticsPage() {
                       </span>
                     </td>
                     <td className="p-4">
-                      <Link href="/cases" className="btn btn-sm btn-ghost border border-white/20 text-xs flex items-center gap-1 hover:text-purple-500 hover:border-purple-500 transition-colors">
-                        Create Case <ExternalLink size={12} />
-                      </Link>
+                      <button 
+                        onClick={() => handleCreateCase(tx)}
+                        disabled={isCreating === tx.id}
+                        className="btn btn-sm btn-ghost border border-white/20 text-xs flex items-center gap-1 hover:text-purple-500 hover:border-purple-500 transition-colors disabled:opacity-50"
+                      >
+                        {isCreating === tx.id ? <Loader2 size={12} className="animate-spin" /> : "Create Case"} 
+                        {isCreating !== tx.id && <ExternalLink size={12} />}
+                      </button>
                     </td>
                   </tr>
                 ))}
