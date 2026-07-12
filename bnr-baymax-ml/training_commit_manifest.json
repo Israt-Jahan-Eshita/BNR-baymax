@@ -1,0 +1,13 @@
+{
+  "commit_scope": "standalone ML training only",
+  "target_project": "bnr-baymax-ml",
+  "does_not_modify": [
+    "superagent-api",
+    "superagent-web"
+  ],
+  "model": "RandomForestClassifier",
+  "target": "requires_review",
+  "artifact": "models/anomaly_review_pipeline.joblib",
+  "training_script": "src/train_model.py",
+  "commit_message": "Train baseline event-aware review signal model on synthetic transaction features"
+}

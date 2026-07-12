@@ -1,0 +1,58 @@
+{
+  "dataset_name": "BNR Baymax Synthetic Review-Signal Dataset",
+  "version": "1.0.0",
+  "random_seed": 42,
+  "window_minutes": 15,
+  "target": "requires_review",
+  "target_meaning": {
+    "0": "Normal or contextually explainable activity",
+    "1": "Transaction pattern requires human review"
+  },
+  "model_features": [
+    "agent_profile",
+    "region",
+    "provider_code",
+    "hour_of_day",
+    "day_of_week",
+    "is_weekend",
+    "transaction_count",
+    "cash_in_count",
+    "cash_out_count",
+    "cash_in_amount",
+    "cash_out_amount",
+    "average_amount",
+    "median_amount",
+    "amount_std_deviation",
+    "unique_account_count",
+    "top_account_share",
+    "near_identical_amount_count",
+    "repeated_amount_ratio",
+    "baseline_transaction_count",
+    "baseline_cash_out_amount",
+    "transaction_count_multiplier",
+    "cash_out_amount_multiplier",
+    "is_event_active",
+    "recent_event_within_3d",
+    "event_type",
+    "event_proximity_days",
+    "event_demand_multiplier"
+  ],
+  "categorical_features": [
+    "agent_profile",
+    "region",
+    "provider_code",
+    "event_type"
+  ],
+  "excluded_audit_columns": [
+    "window_id",
+    "agent_code",
+    "window_start",
+    "event_name",
+    "scenario_type",
+    "scenario_run_id",
+    "split_group",
+    "window_date",
+    "split"
+  ],
+  "leakage_warning": "Never use scenario_type, scenario_run_id, event_name, window_id, split_group, window_date, or split as model inputs."
+}

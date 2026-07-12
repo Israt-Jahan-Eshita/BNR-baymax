@@ -1,0 +1,13 @@
+{
+  "threshold": 0.2,
+  "precision": 1.0,
+  "recall": 1.0,
+  "f1": 1.0,
+  "false_positive_rate": 0.0,
+  "confusion_matrix": {
+    "tn": 987,
+    "fp": 0,
+    "fn": 0,
+    "tp": 55
+  }
+}

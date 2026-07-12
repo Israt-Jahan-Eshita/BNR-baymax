@@ -1,0 +1,17 @@
+column,description,role
+transaction_count,Synthetic transactions in the 15-minute window,feature
+cash_out_amount,Total CASH_OUT amount in BDT,feature
+unique_account_count,Unique synthetic account identifiers,feature
+top_account_share,Largest single-account transaction share,feature
+near_identical_amount_count,Largest amount cluster within about 2 percent,feature
+repeated_amount_ratio,Near-identical cluster size divided by transaction count,feature
+transaction_count_multiplier,Observed count divided by expected normal count,feature
+cash_out_amount_multiplier,Observed CASH_OUT value divided by expected normal value,feature
+is_event_active,Relevant synthetic calendar event is active,feature
+recent_event_within_3d,Within three days of a relevant event window,feature
+event_type,Event context category,feature
+event_proximity_days,"Distance to nearest relevant event window, capped at 30",feature
+event_demand_multiplier,Synthetic expected demand multiplier from calendar context,feature
+scenario_type,Audit-only scenario label; exclude from training inputs,audit
+scenario_run_id,Audit-only scenario identifier; exclude from training inputs,audit
+requires_review,"Target: 1 requires human review, 0 otherwise",target

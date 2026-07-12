@@ -1,0 +1,28 @@
+{
+  "random_seed": 42,
+  "agents": 20,
+  "providers": 3,
+  "synthetic_calendar_events": 18,
+  "raw_transactions": 45975,
+  "feature_windows": 6176,
+  "review_positive_windows": 377,
+  "review_negative_windows": 5799,
+  "positive_rate": 0.061,
+  "split_counts": {
+    "train": 4323,
+    "test": 1042,
+    "validation": 811
+  },
+  "split_positive_rates": {
+    "test": 0.0528,
+    "train": 0.0608,
+    "validation": 0.0727
+  },
+  "scenario_counts": {
+    "EVENT_DEMAND_SPIKE": 3480,
+    "NORMAL": 2319,
+    "REPEATED_AMOUNT_CLUSTER": 150,
+    "CASH_OUT_VELOCITY_SPIKE": 147,
+    "EVENT_REPEATED_AMOUNT_CLUSTER": 80
+  }
+}

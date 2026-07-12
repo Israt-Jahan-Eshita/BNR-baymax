@@ -1,0 +1,15 @@
+{
+  "project": "BNR Baymax ML",
+  "version": "1.0.0",
+  "commit_scope": "complete standalone synthetic dataset and baseline model training",
+  "target": "requires_review",
+  "model_artifact": "models/anomaly_review_pipeline.joblib",
+  "dataset_generator": "src/generate_dataset.py",
+  "training_script": "src/train_model.py",
+  "feature_schema": "model_feature_schema.json",
+  "raw_transactions": 45975,
+  "feature_windows": 6176,
+  "synthetic_only": true,
+  "production_fraud_detector": false,
+  "backend_inference_integrated": false
+}

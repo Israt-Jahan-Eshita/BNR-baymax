@@ -1,0 +1,50 @@
+{
+  "split": "test",
+  "threshold": 0.2,
+  "rows": 1042,
+  "positives": 55,
+  "accuracy": 1.0,
+  "precision": 1.0,
+  "recall": 1.0,
+  "f1": 1.0,
+  "false_positive_rate": 0.0,
+  "confusion_matrix": {
+    "tn": 987,
+    "fp": 0,
+    "fn": 0,
+    "tp": 55
+  },
+  "classification_report": {
+    "0": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 987.0
+    },
+    "1": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 55.0
+    },
+    "accuracy": 1.0,
+    "macro avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 1042.0
+    },
+    "weighted avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 1042.0
+    }
+  },
+  "scenario_positive_recall": {
+    "CASH_OUT_VELOCITY_SPIKE": 1.0,
+    "EVENT_REPEATED_AMOUNT_CLUSTER": 1.0,
+    "REPEATED_AMOUNT_CLUSTER": 1.0
+  },
+  "event_demand_false_positive_rate": 0.0
+}
